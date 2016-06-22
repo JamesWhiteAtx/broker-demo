@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=windows-1252">
+<title>UnboundID Identity Broker - Consent</title>
+<!-- *******************************-->
+<!-- HEAD LINKS -->
+<!-- *******************************-->
+<link rel="stylesheet" media="screen" href="../assets/css/bootstrap.css">
+<link rel="stylesheet" media="screen" href="../assets/css/bootstrap-responsive.css">
+<link rel="stylesheet" media="screen" href="../assets/css/unboundid-oauth.css">
+<link href="../assets/img/unboundid-u-transparent-16x16.ico" rel="shortcut icon">
+</head>
+<body>
+<!-- *******************************-->
+<!-- HEADER -->
+<!-- *******************************-->
+<div class="navbar navbar-fixed-top">
+  <div class="navbar-inner">
+    <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span></a>
+    <span class="ubid-icon">
+      <img src="../assets/img/unboundid-u30.png" alt="UnboundID Logo" style="width:18px;height:24px"></span>
+    <ul class="nav">
+      <li class="divider-vertical"></li>
+    </ul>
+    <span class="ubid-app-name">Identity Broker</span>
+    <div class="nav-collapse">
+      <ul class="nav pull-right">
+        <li class="dropdown">
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+            <i class="icon-question-sign icon-white"></i>
+            <b class="caret"></b>
+          </a>
+          <ul class="dropdown-menu">
+            <li>
+              <a data-toggle="modal" href="#splashscreen">About Identity Broker</a>
+            </li>
+          </ul>
+        </li>
+      </ul>
+            <ul class="nav pull-right">
+        <li class="dropdown">
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown"> <i class="icon-user icon-white"></i> joe.user <b class="caret"></b></a>
+          <ul class="dropdown-menu">
+            <li>
+                            <a href="index.html">Sign Out</a>
+            </li>
+          </ul>
+        </li>
+      </ul>
+          </div>
+  </div>
+</div>
+
+
+<div class="container-fluid">
+  <div class="row-fluid">
+    <h3 class="pap-content-title">Confirm Access Request</h3>
+  </div>
+  <div class="row-fluid">
+    <div class="list-row span12">
+              <p>
+                      Relying Party
+                    is requesting permission to:
+        </p>
+                <ul>
+          <li class="required-scope" data-value="r_basicprofile">Read your resources. <a class="resource-details-link collapsed" href="#details" data-toggle="collapse">Show Requested Information</a>
+            <ul id="details" class="resource-details-list collapse">
+                          <li>GivenName</li>
+                          <li>FamilyName</li>
+                          <li>Email</li>
+                        </ul>
+          </li>
+                  </ul>
+                          <div class="pts mts">
+        <form id="confirmationForm" name="confirmationForm" action="authorize" method="post">
+                              <input name="user_oauth_approval" value="false" type="hidden">
+          <input name="user_oauth_approved_scopes" value="" type="hidden">
+                              <a href="/index.html#JWT=123" id="submitBtn" class="btn btn-primary btn-small" data-value="true">Allow</a>
+                    <a href="consent-error.html" class="btn btn-small mls" data-value="false">Deny</a>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- *******************************-->
+<!-- APPLICATION FOOTER -->
+<!-- *******************************-->
+<div class="page-footer">
+  <hr>
+  <footer>
+    <p>� UnboundID 2013</p>
+  </footer>
+</div>
+<!-- *******************************-->
+<!-- ABOUT BOX MODAL -->
+<!-- *******************************-->
+<div class="modal hide ab" id="splashscreen">
+  <div class="modal-header" style="border:none">
+    <button type="button" class="close" data-dismiss="modal">x</button>
+  </div>
+  <div class="modal-body ab-body">
+    <div class="ab-app-logo">
+      <img src="../assets/img/unboundid-white38.png" alt="UnboundID Logo" height="38" width="150">
+    </div>
+    <div class="ab-app-name">Identity Broker</div>
+    <div class="ab-app-version"> 4.2.0.0</div>
+    <div class="ab-contact-info"> UnboundID Corp.<br>
+      13809 Research Blvd, Suite 500<br>
+      Austin, TX 78750<br>
+      +1 512 600 7700</div>
+    <div><a class="ab-email-info" href="mailto:info@unboundid.com">info@unboundid.com</a></div>
+  </div>
+</div>
+<!-- *******************************-->
+<!-- JAVASCRIPT LIBRARIES -->
+<!-- *******************************-->
+<script src="../assets/js/jquery.js"></script>
+<script src="../assets/js/bootstrap.js"></script>
+
+
+</body></html>

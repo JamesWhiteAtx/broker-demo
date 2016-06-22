@@ -1,0 +1,74 @@
+/* branding */
+.app-icon {
+  float: left;
+  display: block;
+  padding-right: 5px;
+}
+.product-logo {
+  background-size: 100% 100%;
+}
+.product-logo.ubid {
+  width: 150px;
+  height: 38px;
+  background-image: url("../img/unboundid-white38.png");
+}
+/*
+.product-logo.customer {...}
+.product-logo.thirdparty {...}
+*/
+.brand-image span {
+  display: block;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+.navbar-inverse .brand {
+  color: #fff;
+}
+/* misc */
+body {
+  padding-bottom: 40px;
+}
+@media (min-width: 980px) {
+  body {
+    padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+  }
+}
+
+.alert h4 {
+  margin: 10px 0;
+}
+.hero-unit-blurb {
+  margin: 10px;
+}
+.icon-gray {
+  background-image: url("../img/glyphicons-halflings-gray.png");
+}
+.icon-blue {
+  background-image: url("../img/glyphicons-halflings-blue.png");
+}
+.footer {
+  color: #ccc;
+  margin-top: 40px;
+}
+.footer hr {
+  margin: 10px 0;
+}
+a.details i {
+  background-position: -433px -96px; /* icon-minus */
+}
+a.details.collapsed i {
+  background-position: -408px -96px; /* icon-plus */
+}
+.italic {
+  font-style: italic;
+}
+.grow {
+  width: 100%;
+}
+.success {
+  color: #468847;
+}
+.error {
+  color: #b94a48;
+}

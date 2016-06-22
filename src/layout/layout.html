@@ -1,0 +1,89 @@
+<!doctype html>
+<html> 
+    <head>
+        <base href="/">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <link rel="icon" href="img/favicon.ico">    
+        <!-- build:css -->
+        <!-- endbuild -->
+        
+    </head>
+
+    <body ng-controller="mainCtrl as main" ng-cloak>
+
+        <div class="container-fluid">
+            <nav class="navbar navbar-dark bg-inverse navbar-fixed-top">
+                <button class="navbar-toggler hidden-sm-up pull-xs-right" 
+                    type="button" data-toggle="collapse" data-target="#exCollapsingNavbar2">
+                    &#9776;</button> 
+                <a class="navbar-brand" href="/"><strong>Shop</strong>Co</a>
+                <div class="collapse navbar-toggleable-xs" id="exCollapsingNavbar2">
+                    <ul class="nav navbar-nav pull-sm-right">
+
+                        <li ng-if="auth.authorized" class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" 
+                                data-toggle="dropdown" href="#" role="button" 
+                                aria-haspopup="true" aria-expanded="false">
+                                <i class="fa fa-user"></i>
+                                <span ng-if="auth.authorized" ng-bind="auth.profile.name"></span>
+                            </a>
+                            <div class="dropdown-menu">
+                                <a ng-if="auth.authorized" class="dropdown-item" href="#"
+                                    ng-href="{{auth.url.profile}}">
+                                    Profile
+                                </a>
+                                <a ng-if="auth.authorized" class="dropdown-item" href="#"
+                                    ng-click="auth.signOut()">
+                                    Sign Out
+                                </a>
+                            </div>
+                        </li> 
+
+                        <li ng-if="!auth.authorized" class="nav-item">
+                            <a class="nav-link" href="#"
+                               ng-href="{{auth.url.home}}">
+                               <i class="fa fa-user"></i>
+                               <span>Sign In</span>
+                               
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link" href="#"
+                               ng-href="{{auth.url.social}}">Community</a>
+                        </li>
+
+                        <li class="nav-item ">
+                            <a class="nav-link" 
+                               href="#"
+                               ng-href="{{auth.url.checkout}}"
+                               title="View your shopping cart">
+                               <i class="fa fa-shopping-cart"></i> 
+                             </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+        </div>
+
+
+        <div class="content">
+            <p>auth:{{auth}}</p>
+            <%= contents %>
+        </div>
+
+        <!-- build:js -->
+        <!-- endbuild -->
+        <script>
+        (function(UNBOUNDID) {
+            UNBOUNDID.findJwt();
+            angular.element(document).ready(function() {
+                angular.bootstrap(document, ['shopCo']);
+            });
+        }(window.UNBOUNDID = window.UNBOUNDID || {}));  
+        </script>   
+
+    </body>
+
+</html>

@@ -1,0 +1,27 @@
+/* Bootstrap style overrides for the UnboundID views */
+.navbar-inverse .navbar-inner {
+  background-color: #3f5570;
+  background-image: -moz-linear-gradient(top, #556d89, #1e324b);
+  background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#556d89), to(#1e324b));
+  background-image: -webkit-linear-gradient(top, #556d89, #1e324b);
+  background-image: -o-linear-gradient(top, #556d89, #1e324b);
+  background-image: linear-gradient(to bottom, #556d89, #1e324b);
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff556d89', endColorstr='#ff1e324b', GradientType=0);
+  border: 1px solid #0d151f;
+}
+.navbar-inverse .nav li.dropdown.open > .dropdown-toggle, .navbar-inverse .nav li.dropdown.active > .dropdown-toggle, .navbar-inverse .nav li.dropdown.open.active > .dropdown-toggle {
+  background-color: #3f5570;
+}
+.btn-primary {
+  background-color: #fa8f16;
+  background-image: -moz-linear-gradient(top, #fe9c0f, #f57b20);
+  background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#fe9c0f), to(#f57b20));
+  background-image: -webkit-linear-gradient(top, #fe9c0f, #f57b20);
+  background-image: -o-linear-gradient(top, #fe9c0f, #f57b20);
+  background-image: linear-gradient(to bottom, #fe9c0f, #f57b20);
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#fffe9c0f', endColorstr='#fff57b20', GradientType=0);
+  border-color: #f57b20 #f57b20 #c05709;
+}
+.btn-primary:hover, .btn-primary:focus, .btn-primary:active, .btn-primary.active, .btn-primary.disabled, .btn-primary[disabled] {
+  background-color: #f57b20;
+}

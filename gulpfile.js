@@ -1,0 +1,365 @@
+var browserSync = require('browser-sync').create();
+var del = require('del');
+var glob = require("glob")
+var gulp = require('gulp');
+const path = require('path');
+var stylish = require('jshint-stylish');
+var $ = require('gulp-load-plugins')();
+
+var npmPath = 'node_modules/';
+var sourcePath = 'src/';
+var distPath = 'dist/';
+var stylePath = 'style/';
+var scriptPath = 'js/';
+var cfg = {
+    prod: false,
+    src: {
+        app: {
+            html: sourcePath + 'html/**/*.{html,htm}',
+            broker: sourcePath + 'broker/**/*.*',
+            layout: sourcePath + 'layout/layout.html',
+            scss: sourcePath + 'scss/**/*.scss',
+            script: sourcePath + 'js/**/*.js',
+            img: sourcePath + 'img/**/*.*',
+        },
+        vendor: {
+            styles: [
+                npmPath + 'bootstrap/scss/bootstrap.scss',
+                npmPath + 'font-awesome/scss/font-awesome.scss'
+            ],
+            fonts: npmPath + 'font-awesome/fonts/*',
+            scripts: [
+                npmPath + 'jquery/dist/jquery.js',
+                npmPath + 'angular/angular.js',
+                npmPath + 'tether/dist/js/tether.js',
+                npmPath + 'bootstrap/dist/js/bootstrap.js'
+            ]
+        },
+        delay: 0
+    },
+    dist: {
+        reload: distPath + '**/*.{html,htm,css,js}',
+        clean: distPath + '**/*',
+        font: distPath + 'fonts/',
+        img: distPath + 'img/',
+        style: distPath + stylePath,
+        script: distPath + scriptPath,
+        styles: {
+            app: 'app.css',
+            vendor: 'vendor.css'
+        },
+        scripts: { 
+            app: 'app.js',
+            vendor: 'vendor.js'
+        },
+        delay: 0
+    },
+    reload: {
+        styles: {},
+        scripts: {}
+    }
+};
+
+dependsOn('bootstrap.js', 'jquery.js');
+dependsOn('bootstrap.js', 'tether.js');
+dependsOn('angular.js', 'jquery.js');
+dependsOn('app.js', '*');
+
+dependsOn('app.css', '*');
+dependsOn('base.css', '*');
+
+function dependsOn(name, required) {
+    name = path.basename(name).toLowerCase();
+    required = path.basename(required).toLowerCase();
+    cfg.depends = cfg.depends || [];
+    var dependant = cfg.depends.find(function(elm) {return elm.name == name;});
+    if (! dependant) {
+        dependant = {name: name, requires: []};
+        cfg.depends.push(dependant);
+    }
+
+    var idx = dependant.requires.indexOf(required);
+    if (idx === -1) {
+        dependant.requires.push(required);
+    }
+}
+
+
+// set the config to production
+function prodBuild(cb) {
+  cfg.prod = true;
+  if (cb) {
+    cb();
+  }
+}
+
+function ifProd(fcn) {
+    return cfg.prod ? fcn : $.util.noop();
+}
+
+// CLEAN
+// remove all of the dist files
+function clean() {
+  return del([ cfg.dist.clean ]);
+}
+
+gulp.task('clean', clean);
+
+// STYLES
+
+function appStyle() {
+    return gulp
+        .src(cfg.src.app.scss)
+        .pipe($.sass().on('error', $.sass.logError))
+        .pipe(ifProd($.concat(cfg.dist.styles.app)))
+        .pipe(ifProd($.minifyCss()))
+        .pipe($.filenames("app.styles"))
+        .pipe(gulp.dest(cfg.dist.style));
+}
+
+gulp.task('style:app', appStyle);
+
+function vendorStyle() {
+     return gulp
+        .src(cfg.src.vendor.styles)
+        .pipe($.sass().on('error', $.sass.logError))
+        .pipe(ifProd($.concat(cfg.dist.styles.vendor)))
+        .pipe(ifProd($.minifyCss()))
+        .pipe($.filenames("vendor.styles"))
+        .pipe(gulp.dest(cfg.dist.style));
+}
+
+gulp.task('style:vendor', vendorStyle);
+
+function vendorFont() {
+	return gulp
+        .src(cfg.src.vendor.fonts)
+        .pipe(gulp.dest(cfg.dist.font));
+}
+
+gulp.task('font:vendor', vendorFont);
+
+function appImg() {
+	return gulp
+        .src(cfg.src.app.img)
+        .pipe(gulp.dest(cfg.dist.img));
+}
+
+gulp.task('img:app', appImg);
+
+var style = gulp.parallel(vendorStyle, vendorFont, appImg, appStyle);
+
+gulp.task('style', style);
+
+// SCRIPTS
+
+function appScript() {
+    return gulp
+        .src(cfg.src.app.script)
+        //.pipe($.jshint())
+        //.pipe($.jshint.reporter(stylish))
+        .pipe(ifProd($.concat(cfg.dist.scripts.app)))
+        .pipe($.ngAnnotate())
+        .pipe(ifProd($.uglify({ compress: { sequences: false, join_vars: false } })))
+        .pipe($.filenames("app.scripts"))
+        .pipe(gulp.dest(cfg.dist.script));
+}
+
+gulp.task('script:app', appScript);
+
+function vendorScript() {
+    return gulp
+        .src(cfg.src.vendor.scripts)
+        .pipe(ifProd($.concat(cfg.dist.scripts.vendor)))
+        .pipe(ifProd($.uglify({ compress: { sequences: false, join_vars: false } })))
+        .pipe($.filenames("vendor.scripts"))
+        .pipe(gulp.dest(cfg.dist.script));
+}
+
+gulp.task('script:vendor', vendorScript);
+
+var script = gulp.parallel(vendorScript, appScript);
+
+gulp.task('script', script);
+
+// HTML
+
+// COPY HTML
+function appHtml(cb) {
+    var styles = glob.sync(stylePath + '**/*.css', {cwd: distPath}).sort(compare);
+    var scripts = glob.sync(scriptPath + '**/*.js', {cwd: distPath}).sort(compare);
+
+console.log('appHtml styles', styles);
+console.log('appHtml scripts', scripts);
+
+    return gulp.src(cfg.src.app.html)
+        .pipe($.wrap({src: cfg.src.app.layout}))
+        .pipe($.htmlReplace({
+            'css': styles,
+            'js': scripts
+        }))
+        .pipe($.prettify({indent_size: 4}))
+        .pipe($.flatten())
+        .pipe(gulp.dest(distPath));
+}
+
+gulp.task('html:app', appHtml);
+
+function brokerCopy() {
+  return gulp.src(cfg.src.app.broker)
+    // .pipe($.prettify({indent_size: 4}))
+    // .pipe($.flatten())
+    .pipe(gulp.dest(distPath));
+}
+
+gulp.task('copy:broker', brokerCopy);
+
+// BUILD
+var build = gulp.series(gulp.parallel(style, script, brokerCopy), appHtml);
+
+gulp.task('build', build);
+
+var buildProd = gulp.series(prodBuild, build);
+
+gulp.task('build:prod', buildProd);
+
+// SERVER
+
+function server(cb) {
+    browserSync.init({
+        server: "./" + distPath,
+        notify: false
+        // files: ["./dist/**/*.{html,htm,css,js}"],
+        // server: { baseDir: "./dist" }
+    }, cb);
+}
+
+gulp.task('server', server);
+
+// RELOAD
+
+function checkForReplace(cb) {
+    var result = false;
+    
+console.log('pre', cfg.reload.scripts.pre);
+
+    if (cfg.reload.scripts.pre) {
+        recordScripts('post');
+console.log('pre', cfg.reload.scripts.post);
+        result = diffArrs(cfg.reload.scripts.pre, cfg.reload.scripts.post);
+    } else if (cfg.reload.styles.pre) {
+        recordStyles('post');
+        result = diffArrs(cfg.reload.styles.pre, cfg.reload.styles.post);
+    }
+
+    cfg.reload= {
+        styles: {},
+        scripts: {}
+    };
+
+console.log('replace', result);
+    if (result) {
+        return appHtml(cb);
+    } else {
+        cb();
+    } 
+        
+}
+
+function reload(cb) {
+    browserSync.reload();
+    cb();
+}
+
+// WATCH
+
+function diffArrs(arr1, arr2) {
+    return !( (arr1 && arr2) && (arr1.length && arr2.length) &&
+        (arr1.length === arr2.length) );
+}
+
+function recordFiles(type, run, cwd, pattern) {
+    cfg.reload[type][run] = glob.sync(pattern, {cwd: cwd});
+}
+
+function recordStyles(run) {
+    recordFiles('styles', run, cfg.dist.style, '**/*.css')
+}
+
+function recordScripts(run) {
+    recordFiles('scripts', run, cfg.dist.script, '**/*.js')
+}
+
+function watch(cb) {
+    
+    gulp.watch(cfg.src.app.scss, {delay: cfg.src.delay}, gulp.series(
+        function preStyle(cb) { recordStyles('pre');  cb(); },
+        appStyle
+    ));
+    
+    gulp.watch(cfg.src.app.script, {delay: cfg.src.delay}, gulp.series(
+        function preScript(cb) { recordScripts('pre');  cb(); },
+        appScript
+    ));
+    
+    gulp.watch([cfg.src.app.layout, cfg.src.app.html], {delay: cfg.src.delay}, appHtml);
+
+    gulp.watch(cfg.src.app.broker, {delay: cfg.src.delay}, brokerCopy);
+
+    gulp.watch(cfg.dist.reload, {delay: cfg.dist.delay}, gulp.series(
+            checkForReplace,
+            reload
+    ));
+}
+
+gulp.task('watch', watch);
+
+// DEV
+gulp.task('dev', gulp.series(
+    clean,
+    build,
+    server,
+    watch
+));
+
+// PROD
+gulp.task('prod', gulp.series(
+    clean,
+    buildProd,
+    server
+));
+
+gulp.task('ddd', gulp.series(
+    clean,
+    build
+));
+
+ gulp.task('xxx', function(cb) {
+	var a = glob.sync(scriptPath + '**/*.js', {cwd: distPath});
+    //var b = a.map(function(spec){return path.basename(spec);})
+    //console.log(b);
+    var z = a.sort(compare);
+    console.log(z);
+    cb();
+ });
+
+function compare(a, b) {
+    a = path.basename(a).toLowerCase();
+    b = path.basename(b).toLowerCase();
+    var result = 0;
+    var dependant = cfg.depends.find(function(elm) {return elm.name == a;});
+    if (dependant) {
+        var idx = dependant.requires.indexOf(b);
+        if (idx === -1) {
+            idx = dependant.requires.indexOf('*');
+        }
+        if (idx !== -1) {
+            result = 1;
+        }
+    } else if ( a < b ) {
+        result = -1;
+    } else if ( a > b ) {
+        result = 1;
+    }
+    return result;
+}

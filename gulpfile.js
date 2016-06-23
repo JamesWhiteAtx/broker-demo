@@ -1,41 +1,50 @@
-var browserSync = require('browser-sync').create();
-var del = require('del');
-var glob = require("glob")
-var gulp = require('gulp');
+const browserSync = require('browser-sync').create();
+const del = require('del');
+const glob = require("glob")
+const gulp = require('gulp');
+const merge2 = require('merge2');
 const path = require('path');
-var stylish = require('jshint-stylish');
-var $ = require('gulp-load-plugins')();
+const stylish = require('jshint-stylish');
+const $ = require('gulp-load-plugins')();
 
-var npmPath = 'node_modules/';
-var sourcePath = 'src/';
-var distPath = 'dist/';
-var stylePath = 'style/';
-var scriptPath = 'js/';
-var cfg = {
+const npmPath = 'node_modules/';
+const sourcePath = 'src/';
+const vendorPath = 'vendor/';
+const distPath = 'dist/';
+const stylePath = 'style/';
+const scriptPath = 'js/';
+const cfg = {
     prod: false,
     src: {
         app: {
             html: sourcePath + 'html/**/*.{html,htm}',
             broker: sourcePath + 'broker/**/*.*',
             layout: sourcePath + 'layout/layout.html',
-            scss: sourcePath + 'scss/**/*.scss',
+            scss: sourcePath + stylePath + '**/*.scss',
             script: sourcePath + 'js/**/*.js',
             img: sourcePath + 'img/**/*.*',
         },
         vendor: {
-            styles: [
-                npmPath + 'bootstrap/scss/bootstrap.scss',
-                npmPath + 'font-awesome/scss/font-awesome.scss'
+            bootstrap: sourcePath + vendorPath + 'bootbase.scss',
+            awesome: npmPath + 'font-awesome/scss/font-awesome.scss',
+            fonts: [
+                npmPath + 'font-awesome/fonts/*.*',
+                npmPath + 'bootstrap-sass/assets/fonts/**/*.*'
             ],
-            fonts: npmPath + 'font-awesome/fonts/*',
             scripts: [
                 npmPath + 'jquery/dist/jquery.js',
                 npmPath + 'angular/angular.js',
                 npmPath + 'tether/dist/js/tether.js',
-                npmPath + 'bootstrap/dist/js/bootstrap.js'
+                npmPath + 'bootstrap-sass/assets/javascripts/bootstrap.js'
             ]
         },
-        delay: 0
+        delay: 0,
+        sassopts: {
+            outputStyle: 'nested',
+            precison: 10,
+            errLogToConsole: true,
+            includePaths: [npmPath + 'bootstrap-sass/assets/stylesheets']
+        }
     },
     dist: {
         reload: distPath + '**/*.{html,htm,css,js}',
@@ -110,7 +119,7 @@ gulp.task('clean', clean);
 function appStyle() {
     return gulp
         .src(cfg.src.app.scss)
-        .pipe($.sass().on('error', $.sass.logError))
+        .pipe($.sass(cfg.src.sassopts))
         .pipe(ifProd($.concat(cfg.dist.styles.app)))
         .pipe(ifProd($.minifyCss()))
         .pipe($.filenames("app.styles"))
@@ -120,9 +129,13 @@ function appStyle() {
 gulp.task('style:app', appStyle);
 
 function vendorStyle() {
-     return gulp
-        .src(cfg.src.vendor.styles)
-        .pipe($.sass().on('error', $.sass.logError))
+    return  merge2(
+        gulp.src(cfg.src.vendor.awesome)
+            .pipe($.sass().on('error', $.sass.logError)),
+        gulp.src(cfg.src.vendor.bootstrap)
+            .pipe($.sass(cfg.src.sassopts))
+            .pipe($.rename('bootstrap.css'))
+        )
         .pipe(ifProd($.concat(cfg.dist.styles.vendor)))
         .pipe(ifProd($.minifyCss()))
         .pipe($.filenames("vendor.styles"))
@@ -130,6 +143,16 @@ function vendorStyle() {
 }
 
 gulp.task('style:vendor', vendorStyle);
+
+function bootStyle() {
+	return gulp.src(cfg.src.vendor.bootstrap)
+    	.pipe($.sass(cfg.src.sassopts))
+        .pipe($.rename('bootstrap.css'))
+
+        .pipe(gulp.dest(cfg.dist.style));
+}
+
+gulp.task('xxx', gulp.series(clean, prodBuild, appStyle));
 
 function vendorFont() {
 	return gulp
@@ -333,15 +356,6 @@ gulp.task('ddd', gulp.series(
     clean,
     build
 ));
-
- gulp.task('xxx', function(cb) {
-	var a = glob.sync(scriptPath + '**/*.js', {cwd: distPath});
-    //var b = a.map(function(spec){return path.basename(spec);})
-    //console.log(b);
-    var z = a.sort(compare);
-    console.log(z);
-    cb();
- });
 
 function compare(a, b) {
     a = path.basename(a).toLowerCase();

@@ -1,12 +1,13 @@
 
-@import "node_modules/bootstrap/scss/variables";
-@import "node_modules/bootstrap/scss/mixins";
+@import "bootstrap/variables";
+@import "bootstrap/mixins";
 
 body {
     padding-top: 50px;
 }
 
 /* @media(max-width: map-get($grid-breakpoints, sm)) { */
+/*
 @include media-breakpoint-down(xs) {    
     .navbar .navbar-nav>.nav-item {
         float: none;
@@ -19,4 +20,4 @@ body {
         clear:both;
     }
 }
-
+*/

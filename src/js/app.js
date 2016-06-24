@@ -122,9 +122,14 @@
         }
     })
 
-    .controller('mainCtrl', function($scope, auth) {
+    .controller('mainCtrl', function($scope, $http, auth) {
         var main = this;
         $scope.auth = auth;
+
+        $http.get('brand.json').success(function(data) {
+            main.title = data.title
+        });
+
         main.beans = 'shop at shop co, or else';
     })
 

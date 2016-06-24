@@ -1,0 +1,67 @@
+<nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container-fluid">
+
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse" aria-expanded="false">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                  </button>
+            <a class="navbar-brand" href="#">
+                <img class="img-responsive" alt="Brand" src="img/logo.svg">
+            </a>
+        </div>
+        <div class="collapse navbar-collapse" id="navbar-collapse">
+            <ul class="nav navbar-nav navbar-right">
+                <li class="dropdown" ng-if="auth.authorized">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" 
+                        role="button" aria-haspopup="true" aria-expanded="false">
+                        <i class="fa fa-user"></i>
+                        <span ng-if="auth.authorized" ng-bind="auth.profile.name"></span> 
+                        <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                        <li ng-if="auth.authorized">
+                            <a ng-href="{{auth.url.profile}}">
+                                <i class="fa fa-wpforms"></i>
+                                Profile
+                            </a>
+                        </li>
+                        <li role="separator" class="divider hidden-xs"></li>
+                        <li ng-if="auth.authorized">
+                            <a href="#" ng-click="auth.signOut()">
+                                <i class="fa fa-sign-out"></i> 
+                                Sign Out
+                            </a>
+                        </li>
+                        <li role="separator" class="divider visible-xs-block"></li>
+                    </ul>
+                </li>
+                
+                <li ng-if="!auth.authorized">
+                    <a href="#" ng-href="{{auth.url.home}}" title="Sign In">
+                        <i class="fa fa-user"></i> 
+                        Sign In
+                    </a>
+                </li>
+
+                <li class="disabled"> 
+                    <a href="#" ng-href="{{auth.url.social}}" title="Community">
+                        <i class="fa fa-share-alt fa-lg"></i>
+                        <span class="visible-xs-inline visible-lg-inline">Community</span>
+                    </a>
+                </li>
+
+                <li>
+                    <a href="#" ng-href="{{auth.url.checkout}}" title="View your shopping cart">
+                        <i class="fa fa-shopping-cart fa-lg"></i>
+                        <span class="hidden-sm">Check Out</span>
+                    </a>
+                </li>
+                
+
+            </ul>
+        </div>
+
+    </div>
+</nav>

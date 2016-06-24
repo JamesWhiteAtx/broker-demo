@@ -21,6 +21,7 @@
     "glob": "^7.0.5",
     "gulp": "github:gulpjs/gulp#4.0",
     "gulp-concat": "^2.6.0",
+    "gulp-file-include": "^0.13.7",
     "gulp-filenames": "^2.1.0",
     "gulp-flatten": "^0.3.0",
     "gulp-html-replace": "^1.6.1",

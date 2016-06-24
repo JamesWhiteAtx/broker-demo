@@ -13,16 +13,18 @@ const vendorPath = 'vendor/';
 const distPath = 'dist/';
 const stylePath = 'style/';
 const scriptPath = 'js/';
+const layoutPath = 'layout/';
 const cfg = {
     prod: false,
     src: {
         app: {
             html: sourcePath + 'html/**/*.{html,htm}',
             broker: sourcePath + 'broker/**/*.*',
-            layout: sourcePath + 'layout/layout.html',
+            layout: sourcePath + layoutPath + 'layout.html',
             scss: sourcePath + stylePath + '**/*.scss',
             script: sourcePath + 'js/**/*.js',
             img: sourcePath + 'img/**/*.*',
+            json: sourcePath + 'json/**/*.*',
         },
         vendor: {
             bootstrap: sourcePath + vendorPath + 'bootbase.scss',
@@ -47,7 +49,7 @@ const cfg = {
         }
     },
     dist: {
-        reload: distPath + '**/*.{html,htm,css,js}',
+        reload: distPath + '**/*.{html,htm,css,js,json}',
         clean: distPath + '**/*',
         font: distPath + 'fonts/',
         img: distPath + 'img/',
@@ -152,8 +154,6 @@ function bootStyle() {
         .pipe(gulp.dest(cfg.dist.style));
 }
 
-gulp.task('xxx', gulp.series(clean, prodBuild, appStyle));
-
 function vendorFont() {
 	return gulp
         .src(cfg.src.vendor.fonts)
@@ -212,8 +212,8 @@ function appHtml(cb) {
     var styles = glob.sync(stylePath + '**/*.css', {cwd: distPath}).sort(compare);
     var scripts = glob.sync(scriptPath + '**/*.js', {cwd: distPath}).sort(compare);
 
-console.log('appHtml styles', styles);
-console.log('appHtml scripts', scripts);
+// console.log('appHtml styles', styles);
+// console.log('appHtml scripts', scripts);
 
     return gulp.src(cfg.src.app.html)
         .pipe($.wrap({src: cfg.src.app.layout}))
@@ -221,6 +221,7 @@ console.log('appHtml scripts', scripts);
             'css': styles,
             'js': scripts
         }))
+        .pipe($.fileInclude({basepath: sourcePath + layoutPath}))
         .pipe($.prettify({indent_size: 4}))
         .pipe($.flatten())
         .pipe(gulp.dest(distPath));
@@ -237,8 +238,15 @@ function brokerCopy() {
 
 gulp.task('copy:broker', brokerCopy);
 
+function appJson() {
+	return gulp
+        .src(cfg.src.app.json)
+        .pipe(gulp.dest(distPath));
+}
+
 // BUILD
-var build = gulp.series(gulp.parallel(style, script, brokerCopy), appHtml);
+var build = gulp.series(gulp.parallel(style, script, appJson, brokerCopy), 
+    appHtml);
 
 gulp.task('build', build);
 
@@ -325,7 +333,10 @@ function watch(cb) {
         appScript
     ));
     
-    gulp.watch([cfg.src.app.layout, cfg.src.app.html], {delay: cfg.src.delay}, appHtml);
+    gulp.watch([sourcePath + layoutPath + '**/*', cfg.src.app.html], {delay: cfg.src.delay}, 
+        appHtml);
+    
+    gulp.watch(cfg.src.app.json, {delay: cfg.src.delay}, appJson);
 
     gulp.watch(cfg.src.app.broker, {delay: cfg.src.delay}, brokerCopy);
 
@@ -377,3 +388,22 @@ function compare(a, b) {
     }
     return result;
 }
+
+gulp.task('xxx', function () {
+	// return gulp
+    //     .src('src/layout/test.html')
+    //     .pipe($.fileInclude())
+    //     .pipe(gulp.dest(distPath));
+
+    return gulp.src(cfg.src.app.html)
+        .pipe($.wrap({src: cfg.src.app.layout}))
+        // .pipe($.htmlReplace({
+        //     'css': styles,
+        //     'js': scripts
+        // }))
+        .pipe($.fileInclude({basepath: sourcePath + layoutPath}))
+        .pipe($.prettify({indent_size: 4}))
+        .pipe($.flatten())
+        .pipe(gulp.dest(distPath));
+
+});

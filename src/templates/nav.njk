@@ -1,3 +1,4 @@
+{% macro active(page='home') %}
 <nav class="navbar navbar-default navbar-fixed-top">
     <div class="container-fluid">
 
@@ -21,7 +22,8 @@
                         <span ng-if="auth.authorized" ng-bind="auth.profile.name"></span> 
                         <span class="caret"></span></a>
                     <ul class="dropdown-menu">
-                        <li ng-if="auth.authorized">
+                        <li ng-if="auth.authorized" 
+                            class="{%if page == 'profile' %}active{% endif %}">
                             <a ng-href="{{auth.url.profile}}">
                                 <i class="fa fa-wpforms"></i>
                                 Profile
@@ -45,23 +47,28 @@
                     </a>
                 </li>
 
-                <li class="disabled"> 
+                <li class="{%if page == 'social' %}active{% endif %}"> 
                     <a href="#" ng-href="{{auth.url.social}}" title="Community">
                         <i class="fa fa-share-alt fa-lg"></i>
-                        <span class="visible-xs-inline visible-lg-inline">Community</span>
+                        <span class="visible-xs-inline visible-lg-inline">
+                            Community
+                        </span>
                     </a>
                 </li>
 
-                <li>
+                <li class="{%if page == 'checkout' %}active{% endif %}">
                     <a href="#" ng-href="{{auth.url.checkout}}" title="View your shopping cart">
                         <i class="fa fa-shopping-cart fa-lg"></i>
-                        <span class="hidden-sm">Check Out</span>
+                        <span class="hidden-sm">
+                            Check Out
+                        </span>
                     </a>
                 </li>
-                
 
             </ul>
         </div>
 
     </div>
 </nav>
+
+{% endmacro %}

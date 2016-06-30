@@ -5,27 +5,35 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
         <title ng-bind="main.title"></title>
         <link rel="icon" href="img/favicon.ico">    
-        <!-- build:css -->
-        <!-- endbuild -->
         
+        {% for style in styles %}
+        <link rel="stylesheet" href="{$ style $}">
+        {% endfor %}
+
     </head>
 
     <body class="demo" ng-cloak>
 
- 	      @@include('./nav.html')
+        {% import 'nav.njk' as nav %}
+        {$nav.active(name)$}
 
         <div class="content">
             <p>auth:{{auth}}</p>
-            <%= contents %>
+             {% block content %} {% endblock %}
         </div> 
 
-        <!-- build:js -->
-        <!-- endbuild -->
+        {% for script in scripts %}
+        <script src="{$ script $}"></script>
+        {% endfor %}
+
         <script>
         (function(UNBOUNDID) {
             UNBOUNDID.findJwt();
+
+            angular.module(UNBOUNDID.MODULE_NAME).constant('current', '{$ name $}');
+
             angular.element(document).ready(function() {
-                angular.bootstrap(document, ['shopCo']);
+                angular.bootstrap(document, ['broker']);
             });
         }(window.UNBOUNDID = window.UNBOUNDID || {}));  
         </script>   

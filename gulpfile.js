@@ -9,18 +9,18 @@ const $ = require('gulp-load-plugins')();
 
 const npmPath = 'node_modules/';
 const sourcePath = 'src/';
-const vendorPath = 'vendor/';
 const distPath = 'dist/';
+const vendorPath = 'vendor/';
 const stylePath = 'style/';
 const scriptPath = 'js/';
-const layoutPath = 'layout/';
+const templatePath = 'templates/';
 const cfg = {
     prod: false,
     src: {
         app: {
-            html: sourcePath + 'html/**/*.{html,htm}',
+            templates: sourcePath + templatePath,
+            pages: sourcePath + 'pages/**/*.njk',
             broker: sourcePath + 'broker/**/*.*',
-            layout: sourcePath + layoutPath + 'layout.html',
             scss: sourcePath + stylePath + '**/*.scss',
             script: sourcePath + 'js/**/*.js',
             img: sourcePath + 'img/**/*.*',
@@ -212,17 +212,22 @@ function appHtml(cb) {
     var styles = glob.sync(stylePath + '**/*.css', {cwd: distPath}).sort(compare);
     var scripts = glob.sync(scriptPath + '**/*.js', {cwd: distPath}).sort(compare);
 
-// console.log('appHtml styles', styles);
-// console.log('appHtml scripts', scripts);
-
-    return gulp.src(cfg.src.app.html)
-        .pipe($.wrap({src: cfg.src.app.layout}))
-        .pipe($.htmlReplace({
-            'css': styles,
-            'js': scripts
+	return gulp.src(cfg.src.app.pages)
+        .pipe($.data(function (file) {
+            return { 
+                name: file.stem,
+                styles: styles,
+                scripts: scripts
+            };
         }))
-        .pipe($.fileInclude({basepath: sourcePath + layoutPath}))
-        .pipe($.prettify({indent_size: 4}))
+        .pipe($.nunjucksRender({
+            path: [cfg.src.app.templates],
+            envOptions: {tags: {
+                variableStart: '{$',
+                variableEnd: '$}',                
+            }}
+         }))
+        .pipe($.prettify({indent_size: 2}))
         .pipe($.flatten())
         .pipe(gulp.dest(distPath));
 }
@@ -231,8 +236,6 @@ gulp.task('html:app', appHtml);
 
 function brokerCopy() {
   return gulp.src(cfg.src.app.broker)
-    // .pipe($.prettify({indent_size: 4}))
-    // .pipe($.flatten())
     .pipe(gulp.dest(distPath));
 }
 
@@ -272,11 +275,8 @@ gulp.task('server', server);
 function checkForReplace(cb) {
     var result = false;
     
-console.log('pre', cfg.reload.scripts.pre);
-
     if (cfg.reload.scripts.pre) {
         recordScripts('post');
-console.log('pre', cfg.reload.scripts.post);
         result = diffArrs(cfg.reload.scripts.pre, cfg.reload.scripts.post);
     } else if (cfg.reload.styles.pre) {
         recordStyles('post');
@@ -288,13 +288,11 @@ console.log('pre', cfg.reload.scripts.post);
         scripts: {}
     };
 
-console.log('replace', result);
     if (result) {
         return appHtml(cb);
     } else {
         cb();
     } 
-        
 }
 
 function reload(cb) {
@@ -333,8 +331,8 @@ function watch(cb) {
         appScript
     ));
     
-    gulp.watch([sourcePath + layoutPath + '**/*', cfg.src.app.html], {delay: cfg.src.delay}, 
-        appHtml);
+    gulp.watch([cfg.src.app.templates + '**/*', cfg.src.app.pages], 
+        {delay: cfg.src.delay}, appHtml);
     
     gulp.watch(cfg.src.app.json, {delay: cfg.src.delay}, appJson);
 
@@ -363,11 +361,6 @@ gulp.task('prod', gulp.series(
     server
 ));
 
-gulp.task('ddd', gulp.series(
-    clean,
-    build
-));
-
 function compare(a, b) {
     a = path.basename(a).toLowerCase();
     b = path.basename(b).toLowerCase();
@@ -388,22 +381,3 @@ function compare(a, b) {
     }
     return result;
 }
-
-gulp.task('xxx', function () {
-	// return gulp
-    //     .src('src/layout/test.html')
-    //     .pipe($.fileInclude())
-    //     .pipe(gulp.dest(distPath));
-
-    return gulp.src(cfg.src.app.html)
-        .pipe($.wrap({src: cfg.src.app.layout}))
-        // .pipe($.htmlReplace({
-        //     'css': styles,
-        //     'js': scripts
-        // }))
-        .pipe($.fileInclude({basepath: sourcePath + layoutPath}))
-        .pipe($.prettify({indent_size: 4}))
-        .pipe($.flatten())
-        .pipe(gulp.dest(distPath));
-
-});

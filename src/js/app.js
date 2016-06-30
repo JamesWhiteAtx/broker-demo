@@ -5,7 +5,7 @@
 (function(UNBOUNDID) {
     "use strict";
 
-    UNBOUNDID.MODULE_NAME = 'shopCo';
+    UNBOUNDID.MODULE_NAME = 'broker';
 
     angular.module(UNBOUNDID.MODULE_NAME, [])
     .constant('cfg', {

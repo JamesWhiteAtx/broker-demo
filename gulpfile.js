@@ -36,7 +36,6 @@ const cfg = {
             scripts: [
                 npmPath + 'jquery/dist/jquery.js',
                 npmPath + 'angular/angular.js',
-                npmPath + 'tether/dist/js/tether.js',
                 npmPath + 'bootstrap-sass/assets/javascripts/bootstrap.js'
             ]
         },
@@ -72,7 +71,6 @@ const cfg = {
 };
 
 dependsOn('bootstrap.js', 'jquery.js');
-dependsOn('bootstrap.js', 'tether.js');
 dependsOn('angular.js', 'jquery.js');
 dependsOn('app.js', '*');
 

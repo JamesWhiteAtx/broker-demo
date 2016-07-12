@@ -18,6 +18,23 @@
         social: 'social.html',
         signin: 'sign-in.html'
     })
+    .constant('authvals', {
+	    IDENTITY_PROVIDER_URL: '/',
+	    CLIENT_REDIRECT_URL: '/docs/demo/callback.html',
+        CLIENT_ID: '@broker-demo@',
+        SCOPES: 'urn:unboundid:scope:manage_profile ' +
+            'urn:unboundid:scope:password_quality_requirements ' +
+            'urn:unboundid:scope:change_password ' +
+            'urn:unboundid:scope:manage_external_identities ' +
+            'urn:unboundid:scope:manage_sessions ' +
+            'urn:unboundid:scope:manage_consents',
+         ACR_VALUES: 'MFA Default',
+         STORAGE_KEY: {
+            FLOW_STATE: 'my_account_flow_state',
+            ACCESS_TOKEN: 'my_account_access_token',
+            STATE: 'my_account_state'
+        }        
+    })
 
     .service('storage', function($window) {
         var self = this;
@@ -34,7 +51,7 @@
         };        
     })
 
-    .service('auth', function($location, $window, cfg, pages, storage) {
+    .service('auth', function($location, $window, cfg, pages, storage, authvals) {
         var self = this;
         self.authorized = false;
         
@@ -82,12 +99,30 @@
         }
 
         function authUrl(url) {
+
+            var state = Math.floor(Math.random() * (999999 - 0 + 1)) + 0;
+            storage.set(authvals.STORAGE_KEY.STATE, state.toString());
+
             var result = '';
-            if (! self.authorized) {
-                result = result + pages.signin + '?redirect=';
-            }
-            result = result + url;
+    	     result = buildUrl(authvals.IDENTITY_PROVIDER_URL, 'oauth/authorize') + '?' +
+                'response_type=' + encodeURIComponent('token') + '&' +
+                'client_id=' + encodeURIComponent(authvals.CLIENT_ID) + '&' +
+                'redirect_uri=' + encodeURIComponent(authvals.CLIENT_REDIRECT_URL) + '&' +
+                'scope=' + encodeURIComponent(authvals.SCOPES) + '&' +
+                'acr_values=' + encodeURIComponent(authvals.ACR_VALUES) + '&' +
+                'state=' + state;
+
             return result; 
+        }
+
+        function buildUrl(base, path) {
+            if (base && base.lastIndexOf('/') === base.length - 1) {
+                base = base.substring(0, base.length - 1);
+            }
+            if (path && path.indexOf('/') === 0) {
+                path = path.substring(1);
+            }
+            return (base || '') + '/' + (path || '');
         }
         
         function assignUrls() {
@@ -124,10 +159,11 @@
 
     .controller('mainCtrl', function($scope, $http, auth) {
         var main = this;
+
         $scope.auth = auth;
 
         $http.get('brand.json').success(function(data) {
-            main.title = data.title
+            main.title = data.title;
         });
 
         main.beans = 'shop at shop co, or else';

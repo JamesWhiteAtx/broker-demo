@@ -1,0 +1,58 @@
+#
+# This dsconfig batch file creates the Broker Demo OAuth2 Client within the
+# Data Broker.
+#
+# ~/Source/deploy/ib2/bin/dsconfig -n --batch-file ./xtra/setup.dsconfig
+
+dsconfig create-oauth2-client \
+    --client-name "Broker Demo" \
+    --set "description:Broker Demo sample web app." \
+    --set "client-id:@broker-demo@" \
+    --set grant-type:implicit \
+    --set url:/docs/demo \
+    --set redirect-url:/docs/demo/callback.html
+
+# Uncomment the following command to add a redirect URL for running the sample via "npm run dev" with the default
+# configuration
+#dsconfig set-oauth2-client-prop --client-name "Broker Demo" \
+#    --add redirect-url:http://localhost:3004/callback.html
+
+dsconfig create-permitted-scope \
+    --client-name "Broker Demo" \
+    --scope-name urn:unboundid:scope:manage_profile
+
+dsconfig create-permitted-scope \
+    --client-name "Broker Demo" \
+    --scope-name urn:unboundid:scope:password_quality_requirements \
+    --set consent-required:false
+
+dsconfig create-permitted-scope \
+    --client-name "Broker Demo" \
+    --scope-name urn:unboundid:scope:change_password
+
+dsconfig create-permitted-scope \
+    --client-name "Broker Demo" \
+    --scope-name urn:unboundid:scope:manage_external_identities
+
+dsconfig create-permitted-scope \
+    --client-name "Broker Demo" \
+    --scope-name urn:unboundid:scope:manage_sessions
+
+dsconfig create-permitted-scope \
+    --client-name "Broker Demo" \
+    --scope-name urn:unboundid:scope:manage_consents
+
+dsconfig create-permitted-scope \
+    --client-name "Broker Demo" \
+    --scope-name urn:unboundid:scope:validate_email_address \
+    --set consent-required:false
+
+dsconfig create-permitted-scope \
+    --client-name "Broker Demo" \
+    --scope-name urn:unboundid:scope:validate_phone_number \
+    --set consent-required:false
+
+dsconfig create-permitted-scope \
+    --client-name "Broker Demo" \
+    --scope-name urn:unboundid:scope:manage_totp \
+    --set consent-required:false

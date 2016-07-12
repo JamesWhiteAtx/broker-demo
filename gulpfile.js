@@ -9,7 +9,7 @@ const $ = require('gulp-load-plugins')();
 
 const npmPath = 'node_modules/';
 const sourcePath = 'src/';
-const distPath = 'dist/';
+const distPath = '/Users/jameswhite/Source/deploy/ib2/docs/demo/'; //dist/';
 const vendorPath = 'vendor/';
 const stylePath = 'style/';
 const scriptPath = 'js/';
@@ -109,7 +109,7 @@ function ifProd(fcn) {
 // CLEAN
 // remove all of the dist files
 function clean() {
-  return del([ cfg.dist.clean ]);
+  return del([ cfg.dist.clean ], {force: true});
 }
 
 gulp.task('clean', clean);
@@ -245,8 +245,10 @@ function appJson() {
         .pipe(gulp.dest(distPath));
 }
 
+gulp.task('json:app', appJson);
+
 // BUILD
-var build = gulp.series(gulp.parallel(style, script, appJson, brokerCopy), 
+var build = gulp.series(gulp.parallel(style, script, appJson), //, brokerCopy
     appHtml);
 
 gulp.task('build', build);
@@ -318,7 +320,8 @@ function recordScripts(run) {
 }
 
 function watch(cb) {
-    
+    $.livereload.listen();
+
     gulp.watch(cfg.src.app.scss, {delay: cfg.src.delay}, gulp.series(
         function preStyle(cb) { recordStyles('pre');  cb(); },
         appStyle
@@ -336,11 +339,30 @@ function watch(cb) {
 
     gulp.watch(cfg.src.app.broker, {delay: cfg.src.delay}, brokerCopy);
 
-    gulp.watch(cfg.dist.reload, {delay: cfg.dist.delay}, gulp.series(
-            checkForReplace,
-            reload
-    ));
+    gulp.watch(cfg.dist.reload, {delay: cfg.dist.delay}, checkForReplace)
+        .on('change', reloadLive);    
+
 }
+
+// a timeout variable
+var reloadTimer = null;
+
+// actual reload function
+function reloadLive() {
+    var reload_args = arguments;
+
+    // Stop timeout function to run livereload if this function is ran within the last 250ms
+    if (reloadTimer) {
+        clearTimeout(reloadTimer);
+    }
+
+    // Check if any gulp task is still running
+    if (!gulp.isRunning) {
+        reloadTimer = setTimeout(function() {
+            $.livereload.changed.apply(null, reload_args);
+        }, 250);
+    }
+}       
 
 gulp.task('watch', watch);
 
@@ -348,7 +370,7 @@ gulp.task('watch', watch);
 gulp.task('dev', gulp.series(
     clean,
     build,
-    server,
+    //server,
     watch
 ));
 

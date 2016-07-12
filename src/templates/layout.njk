@@ -1,7 +1,6 @@
 <!doctype html>
 <html ng-controller="mainCtrl as main"> 
     <head>
-        <base href="/">
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
         <title ng-bind="main.title"></title>
         <link rel="icon" href="img/favicon.ico">    
@@ -9,7 +8,6 @@
         {% for style in styles %}
         <link rel="stylesheet" href="{$ style $}">
         {% endfor %}
-
     </head>
 
     <body class="demo" ng-cloak>
@@ -17,7 +15,7 @@
         {% import 'nav.njk' as nav %}
         {$nav.active(name)$}
 
-        <div class="content">
+        <div class="content container-fluid">
              {% block content %} {% endblock %}
         </div> 
 
@@ -27,7 +25,7 @@
 
         <script>
         (function(UNBOUNDID) {
-            UNBOUNDID.findJwt();
+            //UNBOUNDID.findJwt();
 
             angular.module(UNBOUNDID.MODULE_NAME).constant('current', '{$ name $}');
 

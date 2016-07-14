@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>UnboundID Data Broker Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="img/favico.ico" rel="shortcut icon">
+</head>
+<body style="background-color: #dbdbdb;">
+  <script>
+    {% block content %} {% endblock %};
+    //alert('callback');
+    
+    var l = location;
+    var origin = l.origin;
+    var path = l.pathname.substring(0, l.pathname.lastIndexOf('/') + 1);
+    var search = encodeURIComponent(btoa(l.search || ''));
+    var hash = encodeURIComponent(btoa(l.hash || '')); 
+    
+    var url = origin + path +
+        '?csearch=' + search +
+        '&chash=' + hash;
+        
+    l.replace(url);
+  </script>
+  
+</body>
+</html>

@@ -1,3 +1,56 @@
 {
-    "title": "ShopCo"
+  "title": "ShopCo",
+  "preferences": [
+    {
+      "id": "urn:X-UnboundID:topic:clothing:shoes",
+      "display": "Shoes",
+      "products": [
+        "img/shoe1.jpeg",
+        "img/shoe2.jpeg",
+        "img/shoe3.jpeg",
+        "img/shoe4.jpeg"
+      ]
+    },
+    {
+      "id": "urn:X-UnboundID:topic:clothing:impress",
+      "display": "Impressive",
+      "products": [
+        "img/hat1.jpeg",
+        "img/hat2.jpeg",
+        "img/spats1.jpeg",
+        "img/gloves1.jpeg",
+        "img/cane1.jpeg"
+      ]
+    },
+    {
+      "id": "urn:X-UnboundID:topic:clothing:workout",
+      "display": "Working Out",
+      "products": [
+        "img/bells1.jpeg",
+        "img/bike1.jpeg",
+        "img/bike2.png",
+        "img/fence1.jpeg",
+        "img/gym1.jpeg"
+      ]
+    },
+    {
+      "id": "urn:X-UnboundID:topic:clothing:casual",
+      "display": "Casual Wear",
+      "products": [
+        "img/sweat1.jpeg",
+        "img/track1.jpeg",
+        "img/sandal1.jpeg",
+        "img/cover1.jpeg"
+      ]
+    },
+    {
+      "id": "urn:X-UnboundID:topic:clothing:accessories",
+      "display": "Accessorize!",
+      "products": [
+        "img/bag1.jpeg",
+        "img/bag2.jpeg",
+        "img/bag3.jpeg"
+      ]
+    }
+  ]
 }

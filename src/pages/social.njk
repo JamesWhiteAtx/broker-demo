@@ -4,6 +4,7 @@
 
 <div ng-controller="socialCtrl as social">
     <h1>Community</h1>
+    <h4 ng-if="!auth.authorized">Please Sign In</h4>
     <p> 
         social:{{social}}
     </p>

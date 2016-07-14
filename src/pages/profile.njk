@@ -2,9 +2,64 @@
 
 {% block content %}
 
-<div ng-controller="profileCtrl as profile">
-  <h1>Profile</h1>
-  <p>profile:{{profile}}</p>
-</div>
+<h4 ng-if="!auth.authorized">Please Sign In</h4>
 
+<div class="container" ng-controller="profileCtrl as profile" ng-if="auth.authorized">
+
+  <h4>Profile</h4>
+
+  <div class="row">
+    <div class="col-md-9">
+      <form class="form-horizontal" role="form">
+        <div class="form-group">
+          <label class="col-sm-2 control-label">Name</label>
+          <div class="col-sm-10">
+            <p class="form-control-static">{{ auth.profile.displayName }}</p>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="col-sm-2 control-label">Username</label>
+          <div class="col-sm-10">
+            <p class="form-control-static" ng-bind="auth.profile.userName">{{ auth.profile.userName }}</p>
+          </div>
+        </div>
+        <div class="form-group" ng-repeat="email in auth.profile.emails | filter:{primary:true}">
+          <label class="col-sm-2 control-label">Email</label>
+          <div class="col-sm-10">
+            <p class="form-control-static">{{ email.value }}</p>
+          </div>
+        </div>
+        <div class="form-group" ng-repeat="address in auth.profile.addresses | filter:{primary:true}">
+          <label class="col-sm-2 control-label">Address </label>
+          <div class="col-sm-10">
+            <p class="form-control-static">
+              <span>{{ address.streetAddress }}</span>,
+              <span>{{ address.locality }}</span>,
+              <span>{{ address.region }}</span>,
+              <span>{{ address.postalCode }}</span>
+            </p>
+          </div>
+        </div>
+        <div class="form-group" ng-repeat="phone in auth.profile.phoneNumbers | filter:{primary:true}">
+          <label class="col-sm-2 control-label">Phone</label>
+          <div class="col-sm-10">
+            <p class="form-control-static">{{ phone.value }}</p>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="col-md-3">
+      <div class="profile-image">
+        <img ng-src="{{profile.photoUrl || 'img/placeholder-user.png'}}"
+            alt="user icon">
+      </div>
+    </div>
+
+  </div>
+
+  <p ng-repeat="preference in auth.profile.preferences">
+    {{preference}}
+  </p>
+
+</div>
 {% endblock %}

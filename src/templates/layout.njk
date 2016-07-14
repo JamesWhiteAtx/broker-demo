@@ -15,7 +15,7 @@
         {% import 'nav.njk' as nav %}
         {$nav.active(name)$}
 
-        <div class="content container-fluid">
+        <div class="content">
              {% block content %} {% endblock %}
         </div> 
 
@@ -25,7 +25,7 @@
 
         <script>
         (function(UNBOUNDID) {
-            //UNBOUNDID.findJwt();
+            // UNBOUNDID.findJwt();
 
             angular.module(UNBOUNDID.MODULE_NAME).constant('current', '{$ name $}');
 

@@ -2,15 +2,16 @@
 
 {% block content %}
 
-<div class="container">
-  <div class="row" ng-if="shop.recommendations">
+<div class="container shopping" ng-controller="shopCtrl as shop">
+
+  <div class="row" ng-if="products.recommendations">
     <div class="col-sm-12">
       <h2>Recommendations for You, {{auth.profile.name.givenName}}</h2>
     </div>
 
   </div>
 
-  <div ng-repeat="group in shop.groups">
+  <div ng-repeat="group in products.groups">
     <div class="row">
       <div class="col-sm-12">
         <h3>{{group.display}}</h2>
@@ -19,11 +20,25 @@
     </div>
     <div class="row">
       <div class="col-sm-6 col-md-4 product" ng-repeat="product in group.products">
-        <div class="thumbnail">
-          <img ng-src={{product}} class="img-responsive" alt="Cinque Terre"><br>
-			Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s
-		
-        </div>
+        <!--<div class="thumbnail">-->
+        <figure>
+          <img ng-src={{product}} class="img-responsive" alt="">
+
+          <!--<figcaption>
+            Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s
+          </figcaption>-->
+        </figure>
+        <a href="#" ng-click="shop.buy(product)">
+          <div class="hover-container">
+            <h2>Product Description</h2>
+            <hr>
+            <h5>
+              Verra Nice
+              <span class="price">$500.00</span>
+            </h5>
+          </div>
+        </a>
+      <!--</div>-->
       </div>
     </div>
   </div>

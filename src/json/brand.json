@@ -1,5 +1,6 @@
 {
   "title": "ShopCo",
+  "logo": "img/logo.svg",
   "preferences": [
     {
       "id": "urn:X-UnboundID:topic:clothing:shoes",

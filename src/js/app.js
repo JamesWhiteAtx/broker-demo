@@ -17,7 +17,7 @@
       profile: 'profile.html',
       checkout: 'checkout.html',
       social: 'social.html',
-      signin: 'sign-in.html'
+      buy: 'buy.html'
     })
     .constant('authvals', {
       IDENTITY_PROVIDER_URL: '/',
@@ -52,8 +52,25 @@
         return $window.sessionStorage.removeItem(key);
       };
     })
+    
+    .service('brand', function brand($q, $http) {
+      var self = this;
+      var deferred = $q.defer(); 
+      self.loaded = deferred.promise;
+      
+      init();
 
-    .service('shop', function shop() {
+      function init() {
+        $http.get('brand.json').then(function (result) {
+          angular.extend(self, result.data);
+          deferred.resolve(self);
+        }).catch(function (reason) {
+          deferred.reject(reason);
+        });
+      }
+    })
+
+    .service('products', function products() {
       var self = this
       self.preferences = null;
       self.groups = null;
@@ -82,32 +99,56 @@
         } 
         if (self.groups.length === 0) {
           self.recommendations = false;
-          self.groups = [{display: 'Offers', products: []}];
+          self.groups = [{display: 'Offers', products: [
+            'img/mahjong1.jpeg',
+            'img/dom1.jpeg',
+            'img/dom2.jpeg',
+            'img/dom3.jpeg'
+            
+          ]}];
         }
 
       }
 
     })
+    
+    .service('utils', function utils() {
+      var self = this;
+      self.parseParams = parseParams;
 
-    .service('auth', function auth($location, $window, $http, $q, shop, pages, storage, authvals) {
+      function parseParams(url) {
+        var params = {},
+          regex = /([^&=]+)=([^&]*)/g,
+          m;
+        url = url.substring(1);
+        while (m = regex.exec(url)) {
+          params[decodeURIComponent(m[1])] = decodeURIComponent(m[2]);
+        }
+        return params;
+      }
+    })
+
+    .service('auth', function auth($location, $window, $http, $q, $httpParamSerializer, 
+        utils, products, pages, storage, authvals) {
       var self = this;
       self.authorized = false;
       self.bearerToken = null;
       self.profile = null;
+      self.url = null;
 
       self.authorize = authorize;
-      //self.signOut = signOut;
+      self.tokenUrl = tokenUrl;
       //self.onlyAuth = onlyAuth;
 
       init();
 
       function init() {
-        var params = parseParams($window.location.search);
+        var params = utils.parseParams($window.location.search);
 
 
         if (params['chash']) {
           // this is an OAuth callback
-          params = parseParams(decodeCallbackArg(params['chash']));
+          params = utils.parseParams(decodeCallbackArg(params['chash']));
           if (params['access_token']) {
             var token = params['access_token'];
             self.authorize(token);
@@ -156,30 +197,6 @@
         // }
       }
 
-      function parseParams(url) {
-        var params = {},
-          regex = /([^&=]+)=([^&]*)/g,
-          m;
-        url = url.substring(1);
-        while (m = regex.exec(url)) {
-          params[decodeURIComponent(m[1])] = decodeURIComponent(m[2]);
-        }
-        return params;
-      }
-
-      function composeParams(params) {
-        var result = '#';
-        for(var prop in params) {
-          if (params.hasOwnProperty(prop)) {
-            if (result) {
-              result += '&'
-            }
-            result += prop + '=' + params[prop];
-          }
-        }
-        return result;
-      }
-
 	    function decodeCallbackArg(arg) {
         var decoded = decodeURIComponent(arg);
         var b = atob(decoded);
@@ -190,7 +207,7 @@
         var a = btoa(arg);
         var encoded = encodeURIComponent(a);
         return encoded; 
-      }
+      }      
 
       function getAuthorizeUrl(page) {
         var state = Math.floor(Math.random() * (999999 - 0 + 1)) + 0;
@@ -229,11 +246,16 @@
         }
       }
 
-      function tokenUrl(url, token) {
+      function tokenUrl(url, token, extra) {
+        var params, tokenParams;
         if (token) {
-          var params = composeParams({access_token: token});
-          var search = encodeCallbackArg(params);
-          return url + '?chash=' + search;
+          var tokenStr = '#' + $httpParamSerializer({"access_token": token}); 
+          var chash = encodeCallbackArg(tokenStr);
+          tokenParams = {"chash": chash};
+        }        
+        if (tokenParams || extra) {
+          params = angular.extend({}, tokenParams, extra);
+          return url + '?' + $httpParamSerializer(params);
         } else {
           return url;
         }
@@ -286,7 +308,7 @@
           })          
           .finally(function () {
             assignUrls(self.bearerToken);
-            shop.defineGroups(self);
+            products.defineGroups(self);
           })
           ;
         
@@ -363,18 +385,43 @@
       // }
     })
 
-    .controller('mainCtrl', function mainCtrl($scope, $http, auth, shop) {
+    .controller('mainCtrl', function mainCtrl($scope, auth, brand) {
       var main = this;
 
       $scope.auth = auth;
-      $scope.shop = shop;
-
-      $http.get('brand.json').success(function (data) {
+      brand.loaded.then(function (data) {
         main.title = data.title;
-        shop.preferences = data.preferences;
-        shop.defineGroups();
+        main.logo = data.logo;
       });
 
+    })
+    
+    .controller('shopCtrl', function cartCtrl($scope, brand, products, auth, pages, 
+        $httpParamSerializer, $window) {
+      var shop = this;
+      shop.buy = buy;
+      
+      $scope.products = products;
+
+      brand.loaded.then(function (data) {
+        products.preferences = data.preferences;
+        products.defineGroups();
+      });
+
+      function buy(product) {
+
+	      var url = auth.tokenUrl(pages.buy, auth.bearerToken, {"product": product});
+        
+        $window.location = url;
+      }
+    })
+
+    .controller('buyCtrl', function buyCtrl($scope, $window, utils) {
+      var buy = this;
+      var params = utils.parseParams($window.location.search);
+      if (params['product']) {
+        buy.product = params['product']
+      }
     })
 
     .controller('cartCtrl', function cartCtrl($scope, auth, pages) {

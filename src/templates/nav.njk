@@ -10,7 +10,7 @@
                     <span class="icon-bar"></span>
                   </button>
             <a class="navbar-brand" href="#" ng-href="{{auth.url.home}}">
-                <img class="img-responsive" alt="Brand" src="img/logo.svg">
+                <img ng-src={{main.logo}} class="img-responsive" alt="Brand">
             </a>
         </div>
         <div class="collapse navbar-collapse" id="navbar-collapse">
@@ -56,12 +56,14 @@
                     </a>
                 </li>
 
-                <li class="{%if page == 'checkout' %}active{% endif %}">
+                <li class="cart {%if page == 'checkout' %}active{% endif %}">
                     <a href="#" ng-href="{{auth.url.checkout}}" title="View your shopping cart">
                         <i class="fa fa-shopping-cart fa-lg"></i>
                         <span class="hidden-sm">
-                            Check Out
+                            Cart
                         </span>
+                        
+                        <span class="cart-val">{{ 123 | currency }}</span>
                     </a>
                 </li>
 

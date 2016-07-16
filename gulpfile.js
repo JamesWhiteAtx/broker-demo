@@ -14,6 +14,7 @@ const vendorPath = 'vendor/';
 const stylePath = 'style/';
 const scriptPath = 'js/';
 const templatePath = 'templates/';
+
 const cfg = {
     prod: false,
     src: {

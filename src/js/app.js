@@ -19,23 +19,10 @@
       social: 'social.html',
       buy: 'buy.html'
     })
-    .constant('authvals', {
-      IDENTITY_PROVIDER_URL: '/',
-      RESOURCE_SERVER_URL: '/',
-      CLIENT_REDIRECT_URL: '/docs/demo/callback.html',
-      CLIENT_ID: '@broker-demo@',
-      SCOPES: 'urn:unboundid:scope:manage_profile ' +
-      'urn:unboundid:scope:password_quality_requirements ' +
-      'urn:unboundid:scope:change_password ' +
-      'urn:unboundid:scope:manage_external_identities ' +
-      'urn:unboundid:scope:manage_sessions ' +
-      'urn:unboundid:scope:manage_consents',
-      ACR_VALUES: 'MFA Default',
-      STORAGE_KEY: {
-        FLOW_STATE: 'my_account_flow_state',
-        ACCESS_TOKEN: 'my_account_access_token',
-        STATE: 'my_account_state'
-      }
+    .constant('keys', {
+      FLOW_STATE: 'my_account_flow_state',
+      ACCESS_TOKEN: 'my_account_access_token',
+      STATE: 'my_account_state'
     })
 
     .service('storage', function storage($window) {
@@ -53,24 +40,30 @@
       };
     })
     
-    .service('brand', function brand($q, $http) {
-      var self = this;
-      var deferred = $q.defer(); 
-      self.loaded = deferred.promise;
-      
-      init();
+    .service('json', function brand($q, $http) {
+      this.load = function load(url) {
+        var deferred = $q.defer(); 
 
-      function init() {
-        $http.get('brand.json').then(function (result) {
+        $http.get(url).then(function (result) {
           angular.extend(self, result.data);
           deferred.resolve(self);
         }).catch(function (reason) {
           deferred.reject(reason);
         });
-      }
+        
+        return deferred.promise;
+      };
     })
 
-    .service('products', function products() {
+    .service('brand', function brand(json) {
+      this.loaded = json.load('brand.json');
+    })
+
+    .service('config', function brand(json) {
+      this.loaded = json.load('config.json');
+    })
+
+    .service('products', function products(brand) {
       var self = this
       self.preferences = null;
       self.groups = null;
@@ -82,34 +75,38 @@
         var found;
         self.groups = [];
         
-        if ( self.preferences && self.preferences.length && 
-          auth && auth.authorized && auth.profile && auth.profile.preferences && 
-          auth.profile.preferences.length)
-        {
-          self.recommendations = true;          
-          self.preferences.forEach(function(any) {
-            found = auth.profile.preferences.filter(function(item) {
-              return (item.id === any.id);
-            })[0];
+        return brand.loaded.then(function (data) {
+          self.preferences = data.preferences;
 
-            if (found) {
-              self.groups.push(any);
+          if ( self.preferences && self.preferences.length && 
+            auth && auth.authorized && auth.profile && auth.profile.preferences && 
+            auth.profile.preferences.length)
+          {
+            self.recommendations = true;          
+            self.preferences.forEach(function(any) {
+              found = auth.profile.preferences.filter(function(item) {
+                return (item.id === any.id);
+              })[0];
+
+              if (found) {
+                self.groups.push(any);
+              }
+            });
+          } 
+
+          if (self.groups.length === 0) {
+            self.recommendations = false;
+            self.groups = [{display: 'Offers', 
+              products: [
+                'img/mahjong1.jpeg',
+                'img/dom1.jpeg',
+                'img/dom2.jpeg',
+                'img/dom3.jpeg'
+              ]}];
             }
-          });
-        } 
-        if (self.groups.length === 0) {
-          self.recommendations = false;
-          self.groups = [{display: 'Offers', products: [
-            'img/mahjong1.jpeg',
-            'img/dom1.jpeg',
-            'img/dom2.jpeg',
-            'img/dom3.jpeg'
-            
-          ]}];
-        }
+        });
 
       }
-
     })
     
     .service('utils', function utils() {
@@ -129,7 +126,7 @@
     })
 
     .service('auth', function auth($location, $window, $http, $q, $httpParamSerializer, 
-        utils, products, pages, storage, authvals) {
+        utils, products, config, pages, storage, keys) {
       var self = this;
       self.authorized = false;
       self.bearerToken = null;
@@ -143,15 +140,32 @@
       init();
 
       function init() {
-        var params = utils.parseParams($window.location.search);
 
+console.log(tokenUrl('xxx', '123123'));            
+        return $q.resolve(utils.parseParams($window.location.search))
+          .then(function (searchParams) {
+            var params, chash, decode, token;
+            if (searchParams['chash']) {
+              chash = searchParams['chash'];
+              decode = decodeCallbackArg(chash);
+              var params = utils.parseParams(decode);
+              if (params['access_token']) {
+                var token = params['access_token'];
+              }
+            }
+            return token;
+          })
+          .then(function (token) {
 
-        if (params['chash']) {
-          // this is an OAuth callback
-          params = utils.parseParams(decodeCallbackArg(params['chash']));
-          if (params['access_token']) {
-            var token = params['access_token'];
-            self.authorize(token);
+            return self.authorize(token); 
+          })
+
+        // if (params['chash']) {
+        //   // this is an OAuth callback
+        //   params = utils.parseParams(decodeCallbackArg(params['chash']));
+        //   if (params['access_token']) {
+        //     var token = params['access_token'];
+        //     self.authorize(token);
           //   // validate state
           //   if (params['state'] !== $window.sessionStorage.getItem(STORAGE_KEY.STATE)) {
           //     this.error = this.formatError('The given state value (' + params['state'] + ') does not match what was ' +
@@ -168,33 +182,18 @@
           // }
           // else {
           //   this.error = this.formatError('Unexpected OAuth callback parameters');
-          }
-        }
-        else {
-          self.authorize();
+        //   }
+        // }
+        // else {
+        //   self.authorize();
           // redirect for access token
           // var state = Utility.getRandomInt(0, 999999);
           // this.window.sessionStorage.setItem(STORAGE_KEY.STATE, state.toString());
-          // var uri = this.httpWrapper.getAuthorizeUrl(state);
+          // var uri = this.httpWrapper.loadAuthorizeUrl(state);
           // this.window.location.assign(uri);
           // return;
-        }
+//        }
 
-        // var jwt;
-        // if(UNBOUNDID.hash) {
-        //   var hashObj = parseQueryString(UNBOUNDID.hash);
-        //   jwt = hashObj.JWT;
-        // }
-
-        // if (!jwt) {
-        //   jwt = storage.get(cfg.jwtKey);
-        // }
-
-        // if (jwt) {
-        //   authorize(jwt);
-        // } else {
-        //   assignUrls();
-        // }
       }
 
 	    function decodeCallbackArg(arg) {
@@ -209,25 +208,30 @@
         return encoded; 
       }      
 
-      function getAuthorizeUrl(page) {
-        var state = Math.floor(Math.random() * (999999 - 0 + 1)) + 0;
-        storage.set(authvals.STORAGE_KEY.STATE, state.toString());
+      function loadAuthorizeUrl(page) {
+        var state;
 
-        var result = '';
-        result = buildUrl(authvals.IDENTITY_PROVIDER_URL, 'oauth/authorize') + '?' +
-          'response_type=' + encodeURIComponent('token') + '&' +
-          'client_id=' + encodeURIComponent(authvals.CLIENT_ID) + '&' +
-          'redirect_uri=' + encodeURIComponent(authvals.CLIENT_REDIRECT_URL) + '&' +
-          'scope=' + encodeURIComponent(authvals.SCOPES) + '&' +
-          'acr_values=' + encodeURIComponent(authvals.ACR_VALUES) + '&' +
-          'state=' + state;// + ';' + page;
-
-        return result;
+        return config.loaded.then(function loaded(data) {
+          state = Math.floor(Math.random() * (999999 - 0 + 1)) + 0;
+          storage.set(keys.STATE, state.toString());
+          
+          return buildUrl(data.IDENTITY_PROVIDER_URL, data.AUTHORIZE_ROUTE) + '?' +
+            'response_type=' + encodeURIComponent('token') + '&' +
+            'client_id=' + encodeURIComponent(data.CLIENT_ID) + '&' +
+            'redirect_uri=' + encodeURIComponent(data.CLIENT_REDIRECT_URL) + '&' +
+            'scope=' + encodeURIComponent(data.SCOPES.join(' ')) + '&' +
+            'acr_values=' + encodeURIComponent(data.ACR_VALUES.join(' ')) + '&' +
+            'state=' + state;// + ';' + page;
+        });
+        // "AUTHORIZE_ROUTE": "oauth/authorize",
+        // "CLIENT_REDIRECT_URL": "/docs/demo/callback.html",
       }
       
-      function getLogoutUrl() {
-        return buildUrl(authvals.IDENTITY_PROVIDER_URL, 'oauth/logout') + '?' +
-          'post_logout_redirect_uri=' + encodeURIComponent(authvals.CLIENT_REDIRECT_URL);
+      function loadLogoutUrl() {
+        return config.loaded.then(function loaded(data) {
+          return buildUrl(data.IDENTITY_PROVIDER_URL, 'oauth/logout') + '?' +
+            'post_logout_redirect_uri=' + encodeURIComponent(data.CLIENT_REDIRECT_URL);
+        });
       }
 
       function getResource(subpath, token) {
@@ -261,23 +265,31 @@
         }
       }
 
-      function authUrl(url, token) {
+      function loadAuthUrl(url, token) {
         if (token) {
-          return tokenUrl(url, token);
+          return $q.resolve( tokenUrl(url, token) );
         } else {
-          return getAuthorizeUrl(url);
+          return loadAuthorizeUrl(url);
         }
       }
 
       function assignUrls(token) {
         self.url = {
           home: tokenUrl(pages.home, token),
-          profile: authUrl(pages.profile, token),
           checkout: tokenUrl(pages.checkout, token),
           social: tokenUrl(pages.social, token),
-          signin: getAuthorizeUrl(pages.home),
-          signout: getLogoutUrl(pages.home, token)
         };
+        return $q.all([
+          loadAuthorizeUrl(pages.home).then(function(url) {
+            return self.url.signin = url;
+          }),
+          loadLogoutUrl(pages.home, token).then(function(url) {
+            return self.url.signout = url;
+          }),
+          loadAuthUrl(pages.profile, token).then(function(url) {
+            return self.url.profile = url;
+          })
+        ]);
       }
 
       function authorize(token) {
@@ -289,14 +301,14 @@
           .then(function (profile) {
             self.authorized = true;
             self.bearerToken = token;
-            storage.set(authvals.STORAGE_KEY.ACCESS_TOKEN, self.bearerToken);
+            storage.set(keys.ACCESS_TOKEN, self.bearerToken);
 
             return self.bearerToken;
           })
           .catch(function (reason) {
             self.authorized = false;
             self.bearerToken = null;
-            storage.remove(authvals.STORAGE_KEY.ACCESS_TOKEN);
+            storage.remove(keys.ACCESS_TOKEN);
 
             return $q.reject(reason);
           })          
@@ -307,8 +319,8 @@
             return $q.reject(reason);
           })          
           .finally(function () {
-            assignUrls(self.bearerToken);
-            products.defineGroups(self);
+            return assignUrls(self.bearerToken);
+            //products.defineGroups(self);
           })
           ;
         
@@ -359,7 +371,7 @@
 
       // function onlyAuth(url) {
       //   if (!self.authorized) {
-      //     $window.location = authUrl(url);
+      //     $window.location = loadAuthUrl(url);
       //     return false;
       //   } else {
       //     return true;
@@ -396,22 +408,16 @@
 
     })
     
-    .controller('shopCtrl', function cartCtrl($scope, brand, products, auth, pages, 
-        $httpParamSerializer, $window) {
+    .controller('shopCtrl', function cartCtrl($scope, products, auth, pages, $window) {
       var shop = this;
       shop.buy = buy;
       
       $scope.products = products;
 
-      brand.loaded.then(function (data) {
-        products.preferences = data.preferences;
-        products.defineGroups();
-      });
+      products.defineGroups();
 
       function buy(product) {
-
 	      var url = auth.tokenUrl(pages.buy, auth.bearerToken, {"product": product});
-        
         $window.location = url;
       }
     })

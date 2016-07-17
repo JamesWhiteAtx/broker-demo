@@ -1,0 +1,14 @@
+{
+  "IDENTITY_PROVIDER_URL": "/",
+  "RESOURCE_SERVER_URL": "/",
+  "AUTHORIZE_ROUTE": "sign-in.html",
+  "CLIENT_REDIRECT_URL": "callback.html",
+  "CLIENT_ID": "@broker-demo@",
+  "SCOPES": ["urn:unboundid:scope:manage_profile", 
+    "urn:unboundid:scope:password_quality_requirements",
+    "urn:unboundid:scope:change_password",
+    "urn:unboundid:scope:manage_external_identities",
+    "urn:unboundid:scope:manage_sessions",
+    "urn:unboundid:scope:manage_consents"],
+  "ACR_VALUES": ["MFA", "Default"]
+}

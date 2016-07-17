@@ -9,7 +9,7 @@ const $ = require('gulp-load-plugins')();
 
 const npmPath = 'node_modules/';
 const sourcePath = 'src/';
-const distPath = '/Users/jameswhite/Source/deploy/ib2/docs/demo/'; //dist/';
+const distPath = 'dist/'; // '/Users/jameswhite/Source/deploy/ib2/docs/demo/'
 const vendorPath = 'vendor/';
 const stylePath = 'style/';
 const scriptPath = 'js/';
@@ -320,31 +320,6 @@ function recordScripts(run) {
     recordFiles('scripts', run, cfg.dist.script, '**/*.js')
 }
 
-function watch(cb) {
-    $.livereload.listen();
-
-    gulp.watch(cfg.src.app.scss, {delay: cfg.src.delay}, gulp.series(
-        function preStyle(cb) { recordStyles('pre');  cb(); },
-        appStyle
-    ));
-    
-    gulp.watch(cfg.src.app.script, {delay: cfg.src.delay}, gulp.series(
-        function preScript(cb) { recordScripts('pre');  cb(); },
-        appScript
-    ));
-    
-    gulp.watch([cfg.src.app.templates + '**/*', cfg.src.app.pages], 
-        {delay: cfg.src.delay}, appHtml);
-    
-    gulp.watch(cfg.src.app.json, {delay: cfg.src.delay}, appJson);
-
-    gulp.watch(cfg.src.app.broker, {delay: cfg.src.delay}, brokerCopy);
-
-    gulp.watch(cfg.dist.reload, {delay: cfg.dist.delay}, checkForReplace)
-        .on('change', reloadLive);    
-
-}
-
 // a timeout variable
 var reloadTimer = null;
 
@@ -363,16 +338,71 @@ function reloadLive() {
             $.livereload.changed.apply(null, reload_args);
         }, 250);
     }
-}       
+} 
+
+function watch(cb) {
+    $.livereload.listen();
+
+    gulp.watch(cfg.src.app.scss, {delay: cfg.src.delay}, gulp.series(
+        function preStyle(cb) { recordStyles('pre');  cb(); },
+        appStyle
+    ));
+    
+    gulp.watch(cfg.src.app.script, {delay: cfg.src.delay}, gulp.series(
+        function preScript(cb) { recordScripts('pre');  cb(); },
+        appScript
+    ));
+    
+    gulp.watch([cfg.src.app.templates + '**/*', cfg.src.app.pages], 
+        {delay: cfg.src.delay}, appHtml);
+    
+    gulp.watch(cfg.src.app.json, {delay: cfg.src.delay}, appJson);
+
+    gulp.watch(cfg.dist.reload, {delay: cfg.dist.delay}, checkForReplace)
+        .on('change', reloadLive);    
+}
 
 gulp.task('watch', watch);
+
+function serverWatch(cb) {
+    
+    gulp.watch(cfg.src.app.scss, {delay: cfg.src.delay}, gulp.series(
+        function preStyle(cb) { recordStyles('pre');  cb(); },
+        appStyle
+    ));
+    
+    gulp.watch(cfg.src.app.script, {delay: cfg.src.delay}, gulp.series(
+        function preScript(cb) { recordScripts('pre');  cb(); },
+        appScript
+    ));
+    
+    gulp.watch([cfg.src.app.templates + '**/*', cfg.src.app.pages], 
+        {delay: cfg.src.delay}, appHtml);
+    
+    gulp.watch(cfg.src.app.json, {delay: cfg.src.delay}, appJson);
+
+    gulp.watch(cfg.src.app.broker, {delay: cfg.src.delay}, brokerCopy);
+
+    gulp.watch(cfg.dist.reload, {delay: cfg.dist.delay}, gulp.series(
+            checkForReplace,
+            reload
+    ));
+}
 
 // DEV
 gulp.task('dev', gulp.series(
     clean,
     build,
-    //server,
     watch
+));
+
+// SERVE
+gulp.task('serve', gulp.series(
+    clean,
+    build,
+    brokerCopy,
+    server,
+    serverWatch
 ));
 
 // PROD

@@ -70,42 +70,59 @@
       self.recommendations = false;
 
       self.defineGroups = defineGroups;
+      self.loadProduct = loadProduct;
 
       function defineGroups(auth) {
         var found;
         self.groups = [];
         
         return brand.loaded.then(function (data) {
-          self.preferences = data.preferences;
 
-          if ( self.preferences && self.preferences.length && 
-            auth && auth.authorized && auth.profile && auth.profile.preferences && 
-            auth.profile.preferences.length)
-          {
-            self.recommendations = true;          
-            self.preferences.forEach(function(any) {
-              found = auth.profile.preferences.filter(function(item) {
-                return (item.id === any.id);
-              })[0];
+          if (auth && auth.authorized && auth.profile && auth.profile.preferences && 
+            auth.profile.preferences.length) {
+            self.preferences = data.preferences;
 
-              if (found) {
-                self.groups.push(any);
-              }
-            });
-          } 
+            if ( self.preferences && self.preferences.length) {
+              self.recommendations = true;          
+              self.preferences.forEach(function(any) {
+                found = auth.profile.preferences.filter(function(item) {
+                  return (item.id === any.id);
+                })[0];
+
+                if (found) {
+                  self.groups.push(any);
+                }
+              });
+            } 
+          }
 
           if (self.groups.length === 0) {
             self.recommendations = false;
-            self.groups = [{display: 'Offers', 
-              products: [
-                'img/mahjong1.jpeg',
-                'img/dom1.jpeg',
-                'img/dom2.jpeg',
-                'img/dom3.jpeg'
-              ]}];
-            }
+            self.groups = [data.offers];
+          }
         });
 
+      }
+
+      function loadProduct(id) {
+        return brand.loaded.then(function (data) {
+          var product;
+          var all = data.preferences.concat(data.offers);
+
+          for (var ig = 0; ig < all.length; ig++) {
+            var group = all[ig];
+            for (var ip = 0; ip < group.products.length; ip++) {
+              if (group.products[ip].id == id) {
+                product = group.products[ip];
+                break;
+              } 
+            }
+            if (product) {
+              break;
+            }
+          }
+          return product;
+        });
       }
     })
     
@@ -125,8 +142,28 @@
       }
     })
 
+    .service('errs', function errs() {
+      var self = this;
+      
+      self.messages = [];
+      self.addMsg = addMsg;
+      self.delMsg = delMsg;
+      
+      function addMsg(title, msg) {
+        self.messages.push({title: title, msg: msg});
+      }
+
+      function delMsg(error) {
+        var idx = self.messages.indexOf(error);
+        if (idx !== -1) {
+          self.messages.splice(idx, 1);
+        }
+      }
+
+    })
+
     .service('auth', function auth($location, $window, $http, $q, $httpParamSerializer, 
-        utils, products, config, pages, storage, keys) {
+        utils, products, config, pages, storage, keys, errs) {
       var self = this;
       self.authorized = false;
       self.bearerToken = null;
@@ -140,61 +177,107 @@
       init();
 
       function init() {
-
-console.log(tokenUrl('xxx', '123123'));            
         return $q.resolve(utils.parseParams($window.location.search))
           .then(function (searchParams) {
-            var params, chash, decode, token;
-            if (searchParams['chash']) {
-              chash = searchParams['chash'];
-              decode = decodeCallbackArg(chash);
-              var params = utils.parseParams(decode);
-              if (params['access_token']) {
-                var token = params['access_token'];
+            var chash, params;
+            chash = searchParams['chash'];
+            if (chash) {
+              params = utils.parseParams(decodeCallbackArg(chash));
+            }
+            return params;
+          })
+          .then(function (params) {
+            var token, error, errorDescr;
+            if (params) {
+              token = params['access_token'];
+              if (token) {
+                return token; 
+              } else if (params['error']) {
+                error = params['error'];
+                errorDescr = params['error_description'];
+                errorDescr = errorDescr.replace(/\+/g, ' ');
+                return $q.reject(errorDescr);
               }
             }
-            return token;
+          })
+          .catch(function(error) {
+            errs.addMsg('Authorization Error', error);
+            return null;
           })
           .then(function (token) {
-
             return self.authorize(token); 
           })
-
-        // if (params['chash']) {
-        //   // this is an OAuth callback
-        //   params = utils.parseParams(decodeCallbackArg(params['chash']));
-        //   if (params['access_token']) {
-        //     var token = params['access_token'];
-        //     self.authorize(token);
-          //   // validate state
-          //   if (params['state'] !== $window.sessionStorage.getItem(STORAGE_KEY.STATE)) {
-          //     this.error = this.formatError('The given state value (' + params['state'] + ') does not match what was ' +
-          //       'sent with the request (' + this.window.sessionStorage.getItem(STORAGE_KEY.STATE) + ')');
-          //   }
-          //   else {
-          //     this.httpWrapper.bearerToken = params['access_token'];
-          //   }
-          // }
-          // else if (params['error']) {
-          //   this.error = this.formatError(params['error_description'] || params['error'],
-          //     params['error_description'] ? params['error'] : undefined);
-          //   this.error.message = this.error.message.replace(/\+/g, ' ');
-          // }
-          // else {
-          //   this.error = this.formatError('Unexpected OAuth callback parameters');
-        //   }
-        // }
-        // else {
-        //   self.authorize();
-          // redirect for access token
-          // var state = Utility.getRandomInt(0, 999999);
-          // this.window.sessionStorage.setItem(STORAGE_KEY.STATE, state.toString());
-          // var uri = this.httpWrapper.loadAuthorizeUrl(state);
-          // this.window.location.assign(uri);
-          // return;
-//        }
-
+          .catch(function (reason) {
+            if (reason && reason.status === 401) {
+              //onUnauthorized();
+              errs.addMsg('Authorization Error', reason.statusText);
+            }
+            return $q.reject(reason);
+          })          
+          ;
       }
+
+      function authorize(token) {
+
+        return $q.resolve(token)
+          .then(function (token) {
+            return retrieveProfile(token);
+          })
+          .then(function (profile) {
+            self.authorized = true;
+            self.bearerToken = token;
+            storage.set(keys.ACCESS_TOKEN, self.bearerToken);
+
+            return self.bearerToken;
+          })
+          .catch(function (reason) {
+            self.authorized = false;
+            self.bearerToken = null;
+            storage.remove(keys.ACCESS_TOKEN);
+
+            return $q.reject(reason);
+          })          
+          .finally(function () {
+            return assignUrls(self.bearerToken).then(function() {
+              products.defineGroups(self);
+            });
+          })
+          ;
+        
+      }
+
+      function retrieveProfile(token) {
+        var profile;
+        return $q.resolve(token)
+          .then(function () {
+              if (token) {
+                return getResource('Me', token);
+              } else {
+                return $q.reject('no token'); 
+              }
+          })
+          .then(function(response) {
+            profile = response.data;
+            var preferences = profile['urn:unboundid:schemas:sample:profile:1.0']['topicPreferences'] || [];
+            preferences = preferences.filter(function filter(item) {
+              return item.strength > 0;
+            }).sort(function compare(a, b) {
+              return a.strength - b.strength;
+            });
+            profile.preferences = preferences;
+            return profile;
+          })
+          .catch(function (reason) {
+            profile = {
+              preferences: []
+            };
+            return $q.reject(reason);
+          })
+          .finally(function (result) {
+            self.profile = profile;
+            return self.profile;
+          });
+      }      
 
 	    function decodeCallbackArg(arg) {
         var decoded = decodeURIComponent(arg);
@@ -223,8 +306,7 @@ console.log(tokenUrl('xxx', '123123'));
             'acr_values=' + encodeURIComponent(data.ACR_VALUES.join(' ')) + '&' +
             'state=' + state;// + ';' + page;
         });
-        // "AUTHORIZE_ROUTE": "oauth/authorize",
-        // "CLIENT_REDIRECT_URL": "/docs/demo/callback.html",
+
       }
       
       function loadLogoutUrl() {
@@ -236,15 +318,17 @@ console.log(tokenUrl('xxx', '123123'));
 
       function getResource(subpath, token) {
         if (token) {
-          var path = 'scim/v2/' + subpath;
-          var url = buildUrl(authvals.RESOURCE_SERVER_URL, path);
+          return config.loaded.then(function loaded(data) {
+            var path = 'scim/v2/' + subpath;
+            var url = buildUrl(data.RESOURCE_SERVER_URL, path);
 
-          var headers = {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json, application/scim+json'
-          };
-          headers['Authorization'] = 'Bearer ' + token;
-          return $http.get(url, { headers: headers });
+            var headers = {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json, application/scim+json'
+            };
+            headers['Authorization'] = 'Bearer ' + token;
+            return $http.get(url, { headers: headers });
+          });
         } else {
           return $q.reject('no token');
         }
@@ -292,73 +376,6 @@ console.log(tokenUrl('xxx', '123123'));
         ]);
       }
 
-      function authorize(token) {
-
-        return $q.resolve(token)
-          .then(function (token) {
-            return retrieveProfile(token);
-          })
-          .then(function (profile) {
-            self.authorized = true;
-            self.bearerToken = token;
-            storage.set(keys.ACCESS_TOKEN, self.bearerToken);
-
-            return self.bearerToken;
-          })
-          .catch(function (reason) {
-            self.authorized = false;
-            self.bearerToken = null;
-            storage.remove(keys.ACCESS_TOKEN);
-
-            return $q.reject(reason);
-          })          
-          .catch(function (reason) {
-            if (reason && reason.status === 401) {
-              onUnauthorized();
-            }
-            return $q.reject(reason);
-          })          
-          .finally(function () {
-            return assignUrls(self.bearerToken);
-            //products.defineGroups(self);
-          })
-          ;
-        
-      }
-
-      function retrieveProfile(token) {
-        var profile;
-        return $q.resolve(token)
-          .then(function () {
-              if (token) {
-                return getResource('Me', token);
-              } else {
-                return $q.reject('no token'); 
-              }
-          })
-          .then(function(response) {
-            profile = response.data;
-            var preferences = profile['urn:unboundid:schemas:sample:profile:1.0']['topicPreferences'] || [];
-            preferences = preferences.filter(function filter(item) {
-              return item.strength > 0;
-            }).sort(function compare(a, b) {
-              return a.strength - b.strength;
-            });
-            profile.preferences = preferences;
-            return profile;
-          })
-          .catch(function (reason) {
-            profile = {
-              preferences: []
-            };
-            return $q.reject(reason);
-          })
-          .finally(function (result) {
-            self.profile = profile;
-            return self.profile;
-          });
-      }
-
       function buildUrl(base, path) {
         if (base && base.lastIndexOf('/') === base.length - 1) {
           base = base.substring(0, base.length - 1);
@@ -378,10 +395,10 @@ console.log(tokenUrl('xxx', '123123'));
       //   }
       // }
 
-      function onUnauthorized() {
-        alert('Sorry - you are no longer authorized, please sign in again.');
-        $window.location = pages.home;
-      }
+      // function onUnauthorized() {
+      //   alert('Sorry - you are no longer authorized, please sign in again.');
+      //   $window.location = pages.home;
+      // }
 
       // function parseQueryString(hashStr) {
       //   var args_enc, i, nameval, ret;
@@ -397,10 +414,12 @@ console.log(tokenUrl('xxx', '123123'));
       // }
     })
 
-    .controller('mainCtrl', function mainCtrl($scope, auth, brand) {
+    .controller('mainCtrl', function mainCtrl($scope, auth, brand, errs) {
       var main = this;
 
       $scope.auth = auth;
+      $scope.errs = errs;
+
       brand.loaded.then(function (data) {
         main.title = data.title;
         main.logo = data.logo;
@@ -417,17 +436,39 @@ console.log(tokenUrl('xxx', '123123'));
       products.defineGroups();
 
       function buy(product) {
-	      var url = auth.tokenUrl(pages.buy, auth.bearerToken, {"product": product});
+	      var url = auth.tokenUrl(pages.buy, auth.bearerToken, {"product": product.id});
         $window.location = url;
       }
     })
 
-    .controller('buyCtrl', function buyCtrl($scope, $window, utils) {
+    .controller('buyCtrl', function buyCtrl($scope, $window, utils, products) {
       var buy = this;
-      var params = utils.parseParams($window.location.search);
-      if (params['product']) {
-        buy.product = params['product']
+      buy.inc = inc;
+      buy.dec = dec;
+      
+      init();
+
+      function init() {
+        var params = utils.parseParams($window.location.search);
+        var id = params['product'];
+        if (id) {
+          products.loadProduct(id)
+          .then(function(product) {
+            product.qty = 1;
+            buy.product = product;
+          });
+        }
       }
+
+      function inc() {
+        buy.product.qty += 1;
+      }
+      function dec() {
+        if (buy.product && buy.product.qty > 0) {
+          buy.product.qty -= 1;
+        }
+      }      
+      
     })
 
     .controller('cartCtrl', function cartCtrl($scope, auth, pages) {

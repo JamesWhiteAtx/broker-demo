@@ -80,6 +80,23 @@ body {
       }
     }
   }
+  .buying {
+    .img-responsive {
+      height: 300px;
+    }  
+    .qty {
+      @include user-select(none);
+      .fa.dec, .fa.inc {
+        cursor: pointer;
+        padding-left: 5px;
+        padding-right: 5px;
+      }
+    }
+    .btn.add {
+      margin-top: 15px;
+    }
+  }
+  
 }
 
 [ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {

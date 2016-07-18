@@ -6,52 +6,62 @@
       "id": "urn:X-UnboundID:topic:clothing:shoes",
       "display": "Shoes",
       "products": [
-        "img/shoe1.jpeg",
-        "img/shoe2.jpeg",
-        "img/shoe3.jpeg",
-        "img/shoe4.jpeg"
+        {"id": "shoe1", "price": "100", "descr1": "Pointy Shoes", "descr2": "Red", "img": "img/shoe1.jpeg"},
+        {"id": "shoe2", "price": "222.2", "descr1": "Buckle Shoes", "descr2": "Green", "img": "img/shoe2.jpeg"},
+        {"id": "shoe3", "price": "123", "descr1": "Curly Shoes", "descr2": "Black", "img": "img/shoe3.jpeg"},
+        {"id": "shoe4", "price": "500", "descr1": "Button Shoes", "descr2": "Two Tone", "img": "img/shoe4.jpeg"}
       ]
     },
     {
       "id": "urn:X-UnboundID:topic:clothing:impress",
-      "display": "Impressive",
+      "display": "I'm Impressed!",
       "products": [
-        "img/hat1.jpeg",
-        "img/hat2.jpeg",
-        "img/spats1.jpeg",
-        "img/gloves1.jpeg",
-        "img/cane1.jpeg"
+        {"id": "hat1", "price": "500", "descr1": "Top Hat", "descr2": "Black", "img": "img/hat1.jpeg"},
+        {"id": "hat2", "price": "375", "descr1": "Bowler Hat", "descr2": "Black", "img": "img/hat2.jpeg"},
+        {"id": "spats1", "price": "250", "descr1": "Classy Spatz", "descr2": "Two Tone", "img": "img/spats1.jpeg"},
+        {"id": "gloves1", "price": "50.5", "descr1": "Formal Gloves", "descr2": "Ivory", "img": "img/gloves1.jpeg"},
+        {"id": "cane1", "price": "200", "descr1": "Walking Cane", "descr2": "Silver", "img": "img/cane1.jpeg"}
       ]
     },
     {
       "id": "urn:X-UnboundID:topic:clothing:workout",
       "display": "Working Out",
       "products": [
-        "img/bells1.jpeg",
-        "img/bike1.jpeg",
-        "img/bike2.png",
-        "img/fence1.jpeg",
-        "img/gym1.jpeg"
+        {"id": "bells1", "price": "50", "descr1": "Kettle Bells", "descr2": "5 lb", "img": "img/bells1.jpeg"},
+        {"id": "bike1", "price": "100", "descr1": "Fast Bike", "descr2": "3 speed", "img": "img/bike1.jpeg"},
+        {"id": "bike2", "price": "250", "descr1": "Fancy Bike", "descr2": "1 speed", "img": "img/bike2.png"},
+        {"id": "fence1", "price": "450", "descr1": "Fencing Gear", "descr2": "Used", "img": "img/fence1.jpeg"},
+        {"id": "gym1", "price": "750", "descr1": "Pommel Horse", "descr2": "Leather", "img": "img/gym1.jpeg"}
       ]
     },
     {
       "id": "urn:X-UnboundID:topic:clothing:casual",
       "display": "Casual Wear",
       "products": [
-        "img/sweat1.jpeg",
-        "img/track1.jpeg",
-        "img/sandal1.jpeg",
-        "img/cover1.jpeg"
+        {"id": "sweat1", "price": "25", "descr1": "Sweat Pant", "descr2": "Grey", "img": "img/sweat1.jpeg"},
+        {"id": "track1", "price": "75", "descr1": "Track Suite", "descr2": "Aqua", "img": "img/track1.jpeg"},
+        {"id": "sandal1", "price": "35", "descr1": "Sandals", "descr2": "Leather", "img": "img/sandal1.jpeg"},
+        {"id": "cover1", "price": "15", "descr1": "Cover Alls", "descr2": "Denim", "img": "img/cover1.jpeg"}
       ]
     },
     {
       "id": "urn:X-UnboundID:topic:clothing:accessories",
       "display": "Accessorize!",
       "products": [
-        "img/bag1.jpeg",
-        "img/bag2.jpeg",
-        "img/bag3.jpeg"
+        {"id": "bag1", "price": "550", "descr1": "Rochambeau Hand Bag", "descr2": "Silver", "img": "img/bag1.jpeg"},
+        {"id": "bag2", "price": "759", "descr1": "Richelieu Clutch", "descr2": "Velvet", "img": "img/bag2.jpeg"},
+        {"id": "bag3", "price": "234", "descr1": "Toussaint Purse", "descr2": "Embroidered", "img": "img/bag3.jpeg"}
       ]
     }
-  ]
+  ],
+  "offers": {
+    "display": "Offers",
+    "products": [
+      {"id": "mahjong1", "price": "123", "descr1": "Mahjong1 Set", "descr2": "Scarlet", "img": "img/mahjong1.jpeg"},
+      {"id": "dom1", "price": "55", "descr1": "Dominoes Set", "descr2": "Ebony", "img": "img/dom1.jpeg"},
+      {"id": "dom2", "price": "56", "descr1": "Dominoes Set", "descr2": "Scrimshaw", "img": "img/dom2.jpeg"},
+      {"id": "dom3", "price": "76", "descr1": "Dominoes Set", "descr2": "Jaune", "img": "img/dom3.jpeg"}
+    ]
+  }
+
 }

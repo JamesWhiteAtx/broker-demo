@@ -1,8 +1,44 @@
 {% extends "layout.njk" %}
 
 {% block content %}
-<h4>buy</h4>
-<div class="container" ng-controller="buyCtrl as buy">
-  <img ng-src={{buy.product}} class="img-responsive">
+  
+<div class="container buying" ng-controller="buyCtrl as buy">
+  <div class="row">
+    <div class="col-sm-6 img">
+      <img ng-src={{buy.product.img}} class="img-responsive">
+    </div>
+    <div class="col-sm-6 details">
+      <h2>{{buy.product.descr1}}</h2>
+      <h4>{{buy.product.descr2}}</h4>
+      
+      <div class="row">
+        <div class="col-xs-4">
+          <h4><span class="price">{{buy.product.price | currency}}</span></h4>
+        </div>
+        <div class="col-xs-4">
+          <h4 class="qty">
+            <span class="fa fa-caret-left fa-lg dec" ng-click="buy.dec()"></span>
+            <span>{{buy.product.qty}}</span>
+            <span class="fa fa-caret-right fa-lg inc" ng-click="buy.inc()"></span>
+          </h4>
+        </div>
+        <div class="col-xs-4">
+          <h4><span class="price">{{buy.product.qty * buy.product.price | currency}}</span></h4>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-6 col-md-4">
+          <button type="button" class="btn btn-default btn-block add" ng-if="buy.product.qty">
+            <i class="fa fa-shopping-cart fa-lg"></i>
+            Add To Cart
+          </button>
+        
+        </div>
+      </div>
+    </div>
+  </div>
+ 
+  
 </div> 
+<p>{{buy.product}}</p>
 {% endblock %}

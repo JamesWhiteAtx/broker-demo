@@ -9,7 +9,7 @@ const $ = require('gulp-load-plugins')();
 
 const npmPath = 'node_modules/';
 const sourcePath = 'src/';
-const distPath = 'dist/'; // '/Users/jameswhite/Source/deploy/ib2/docs/demo/'
+const distPath = '/Users/jameswhite/Source/deploy/ib2/docs/demo/'
 const vendorPath = 'vendor/';
 const stylePath = 'style/';
 const scriptPath = 'js/';

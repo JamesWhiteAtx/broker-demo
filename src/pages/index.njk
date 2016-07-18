@@ -22,7 +22,7 @@
       <div class="col-sm-6 col-md-4 product" ng-repeat="product in group.products">
         <!--<div class="thumbnail">-->
         <figure>
-          <img ng-src={{product}} class="img-responsive" alt="">
+          <img ng-src={{product.img}} class="img-responsive" alt="">
 
           <!--<figcaption>
             Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s
@@ -30,11 +30,11 @@
         </figure>
         <a href="#" ng-click="shop.buy(product)">
           <div class="hover-container">
-            <h2>Product Description</h2>
+            <h2>{{product.descr1}}</h2>
             <hr>
             <h5>
-              Verra Nice
-              <span class="price">$500.00</span>
+              {{product.descr2}}
+              <span class="price">{{product.price | currency}}</span>
             </h5>
           </div>
         </a>

@@ -8,16 +8,11 @@
 <body style="background-color: #dbdbdb;">
   <script>
     {% block content %} {% endblock %};
-    
     var l = location;
     var origin = l.origin;
     var path = l.pathname.substring(0, l.pathname.lastIndexOf('/') + 1);
     var search = encodeURIComponent(btoa(l.search || ''));
-
     var hash = encodeURIComponent(btoa(l.hash || '')); 
-
-    alert('hash', hash);
-    
     var url = origin + path +
         '?csearch=' + search +
         '&chash=' + hash;

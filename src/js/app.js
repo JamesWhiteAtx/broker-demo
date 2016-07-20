@@ -197,7 +197,7 @@
         var data = storage.getObject(keys.CART);
 
         if (!angular.isObject(data) || 
-          (data.user && self.user && (data.user !== self.user))) {
+          (data.last && self.user && (data.last !== self.user))) {
           storage.remove(keys.CART);
           data = {}
         }
@@ -237,7 +237,10 @@
         })
         self.qty = qty;
         self.total = tot;
-
+        
+        var data = storage.getObject(keys.CART) || {};
+        
+        self.last = self.user || data.last;
         storage.setObject(keys.CART, self);
       }
     })
@@ -380,11 +383,12 @@
           storage.set(keys.STATE, state.toString());
           
           return buildUrl(data.IDENTITY_PROVIDER_URL, data.AUTHORIZE_ROUTE) + '?' +
-            'response_type=' + encodeURIComponent('token') + '&' +
+            'response_type=' + encodeURIComponent('token id_token') + '&' +
             'client_id=' + encodeURIComponent(data.CLIENT_ID) + '&' +
             'redirect_uri=' + encodeURIComponent(data.CLIENT_REDIRECT_URL) + '&' +
             'scope=' + encodeURIComponent(data.SCOPES.join(' ')) + '&' +
             'acr_values=' + encodeURIComponent(data.ACR_VALUES.join(' ')) + '&' +
+            'nonce=' + encodeURIComponent(state) + '&' +
             'state=' + encodeURIComponent(state + ';' + current);
         });
 

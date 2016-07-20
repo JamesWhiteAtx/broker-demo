@@ -19,6 +19,14 @@ dsconfig create-oauth2-client \
 
 dsconfig create-permitted-scope \
     --client-name "Broker Demo" \
+    --scope-name openid
+
+dsconfig create-permitted-scope \
+    --client-name "Broker Demo" \
+    --scope-name profile
+
+dsconfig create-permitted-scope \
+    --client-name "Broker Demo" \
     --scope-name urn:unboundid:scope:manage_profile
 
 dsconfig create-permitted-scope \

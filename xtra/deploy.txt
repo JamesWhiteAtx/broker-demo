@@ -1,0 +1,11 @@
+cat ~/.ssh/id_rsa.pub | ssh root@vm-small-71.unboundid.lab 'cat >> ~/.ssh/authorized_keys'
+
+cd Source/packages/
+scp -r * root@vm-small-71.unboundid.lab:~/jpw/packages
+scp -r *.sh root@vm-small-71.unboundid.lab:~/jpw/deploy
+scp setup.dsconfig  root@vm-small-71.unboundid.lab:~/jpw/deploy/ib2/samples/demo
+
+/setup-zip-ib.sh 1  
+./setup-zip-ib.sh 2 1 
+./bin/dsconfig -n --batch-file ./samples/demo/setup.dsconfig
+mkdir ..ib/docs/demo

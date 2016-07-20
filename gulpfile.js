@@ -9,74 +9,84 @@ const $ = require('gulp-load-plugins')();
 
 const npmPath = 'node_modules/';
 const sourcePath = 'src/';
-const distPath = '/Users/jameswhite/Source/deploy/ib2/docs/demo/'
 const vendorPath = 'vendor/';
 const stylePath = 'style/';
 const scriptPath = 'js/';
 const templatePath = 'templates/';
+const serveDist = 'dist/';
+const docsDist = '/Users/jameswhite/Source/deploy/ib2/docs/demo/';
 
-const cfg = {
+var distPath = '';
+var cfg = {}
+
+function configure(dist) {
+  distPath = dist;
+  cfg = {
     prod: false,
     src: {
-        app: {
-            templates: sourcePath + templatePath,
-            pages: sourcePath + 'pages/**/*.njk',
-            broker: sourcePath + 'broker/**/*.*',
-            scss: sourcePath + stylePath + '**/*.scss',
-            script: sourcePath + 'js/**/*.js',
-            img: sourcePath + 'img/**/*.*',
-            json: sourcePath + 'json/**/*.*',
-        },
-        vendor: {
-            bootstrap: sourcePath + vendorPath + 'bootbase.scss',
-            awesome: npmPath + 'font-awesome/scss/font-awesome.scss',
-            fonts: [
-                npmPath + 'font-awesome/fonts/*.*',
-                npmPath + 'bootstrap-sass/assets/fonts/**/*.*'
-            ],
-            scripts: [
-                npmPath + 'jquery/dist/jquery.js',
-                npmPath + 'angular/angular.js',
-                npmPath + 'bootstrap-sass/assets/javascripts/bootstrap.js'
-            ]
-        },
-        delay: 0,
-        sassopts: {
-            outputStyle: 'nested',
-            precison: 10,
-            errLogToConsole: true,
-            includePaths: [npmPath + 'bootstrap-sass/assets/stylesheets']
-        }
+      app: {
+        templates: sourcePath + templatePath,
+        pages: sourcePath + 'pages/**/*.njk',
+        broker: sourcePath + 'broker/**/*.*',
+        scss: sourcePath + stylePath + '**/*.scss',
+        script: sourcePath + 'js/**/*.js',
+        img: sourcePath + 'img/**/*.*',
+        json: sourcePath + 'json/**/*.*',
+      },
+      vendor: {
+        bootstrap: sourcePath + vendorPath + 'bootbase.scss',
+        awesome: npmPath + 'font-awesome/scss/font-awesome.scss',
+        fonts: [
+          npmPath + 'font-awesome/fonts/*.*',
+          npmPath + 'bootstrap-sass/assets/fonts/**/*.*'
+        ],
+        scripts: [
+          npmPath + 'jquery/dist/jquery.js',
+          npmPath + 'angular/angular.js',
+          npmPath + 'bootstrap-sass/assets/javascripts/bootstrap.js'
+        ]
+      },
+      delay: 0,
+      sassopts: {
+        outputStyle: 'nested',
+        precison: 10,
+        errLogToConsole: true,
+        includePaths: [npmPath + 'bootstrap-sass/assets/stylesheets']
+      }
     },
     dist: {
-        reload: distPath + '**/*.{html,htm,css,js,json}',
-        clean: distPath + '**/*',
-        font: distPath + 'fonts/',
-        img: distPath + 'img/',
-        style: distPath + stylePath,
-        script: distPath + scriptPath,
-        styles: {
-            app: 'app.css',
-            vendor: 'vendor.css'
-        },
-        scripts: { 
-            app: 'app.js',
-            vendor: 'vendor.js'
-        },
-        delay: 0
+      reload: distPath + '**/*.{html,htm,css,js,json}',
+      clean: distPath + '**/*',
+      font: distPath + 'fonts/',
+      img: distPath + 'img/',
+      style: distPath + stylePath,
+      script: distPath + scriptPath,
+      styles: {
+        app: 'app.css',
+        vendor: 'vendor.css'
+      },
+      scripts: {
+        app: 'app.js',
+        vendor: 'vendor.js'
+      },
+      delay: 0
     },
     reload: {
-        styles: {},
-        scripts: {}
+      styles: {},
+      scripts: {}
     }
-};
+  };
 
-dependsOn('bootstrap.js', 'jquery.js');
-dependsOn('angular.js', 'jquery.js');
-dependsOn('app.js', '*');
+  dependsOn('bootstrap.js', 'jquery.js');
+  dependsOn('angular.js', 'jquery.js');
+  dependsOn('app.js', '*');
 
-dependsOn('app.css', '*');
-dependsOn('base.css', '*');
+  dependsOn('app.css', '*');
+  dependsOn('base.css', '*');
+}
+
+// default to configuring for loal development server
+configServe();
 
 function dependsOn(name, required) {
     name = path.basename(name).toLowerCase();
@@ -94,6 +104,19 @@ function dependsOn(name, required) {
     }
 }
 
+function configServe(cb) {
+  configure(serveDist);
+  if (cb) {
+    cb();
+  }
+}
+
+function configDocs(cb) {
+	configure(docsDist);
+  if (cb) {
+    cb();
+  }
+}
 
 // set the config to production
 function prodBuild(cb) {
@@ -205,6 +228,28 @@ var script = gulp.parallel(vendorScript, appScript);
 gulp.task('script', script);
 
 // HTML
+
+
+function compare(a, b) {
+    a = path.basename(a).toLowerCase();
+    b = path.basename(b).toLowerCase();
+    var result = 0;
+    var dependant = cfg.depends.find(function(elm) {return elm.name == a;});
+    if (dependant) {
+        var idx = dependant.requires.indexOf(b);
+        if (idx === -1) {
+            idx = dependant.requires.indexOf('*');
+        }
+        if (idx !== -1) {
+            result = 1;
+        }
+    } else if ( a < b ) {
+        result = -1;
+    } else if ( a > b ) {
+        result = 1;
+    }
+    return result;
+}
 
 // COPY HTML
 function appHtml(cb) {
@@ -390,7 +435,8 @@ function serverWatch(cb) {
 }
 
 // DEV
-gulp.task('dev', gulp.series(
+gulp.task('docs', gulp.series(
+    configDocs,
     clean,
     build,
     watch
@@ -398,6 +444,7 @@ gulp.task('dev', gulp.series(
 
 // SERVE
 gulp.task('serve', gulp.series(
+    configServe,
     clean,
     build,
     brokerCopy,
@@ -412,23 +459,50 @@ gulp.task('prod', gulp.series(
     server
 ));
 
-function compare(a, b) {
-    a = path.basename(a).toLowerCase();
-    b = path.basename(b).toLowerCase();
-    var result = 0;
-    var dependant = cfg.depends.find(function(elm) {return elm.name == a;});
-    if (dependant) {
-        var idx = dependant.requires.indexOf(b);
-        if (idx === -1) {
-            idx = dependant.requires.indexOf('*');
-        }
-        if (idx !== -1) {
-            result = 1;
-        }
-    } else if ( a < b ) {
-        result = -1;
-    } else if ( a > b ) {
-        result = 1;
-    }
-    return result;
+function remoteDeploy() {
+  return gulp.src(cfg.dist.reload)
+    .pipe($.rsync({
+      root: distPath,
+      username: 'root',
+      hostname: 'vm-small-71.unboundid.lab',
+      destination: '~/jpw/deploy/ib2/docs/demo'
+    }));
 }
+
+gulp.task('deploy:remote', gulp.series(
+  configServe, 
+  remoteDeploy));
+
+function remoteWatch(cb) {
+  $.livereload.listen();
+  
+  gulp.watch(cfg.src.app.scss, { delay: cfg.src.delay }, gulp.series(
+    function preStyle(cb) { recordStyles('pre'); cb(); },
+    appStyle
+  ));
+
+  gulp.watch(cfg.src.app.script, { delay: cfg.src.delay }, gulp.series(
+    function preScript(cb) { recordScripts('pre'); cb(); },
+    appScript
+  ));
+
+  gulp.watch([cfg.src.app.templates + '**/*', cfg.src.app.pages],
+    { delay: cfg.src.delay }, appHtml);
+
+  gulp.watch(cfg.src.app.json, { delay: cfg.src.delay }, appJson);
+
+  gulp.watch(cfg.dist.reload, { delay: cfg.dist.delay }, 
+    gulp.series(checkForReplace, remoteDeploy))
+    .on('change', reloadLive); 
+}
+
+gulp.task('test:watch', remoteWatch);
+
+// REMOTE
+gulp.task('remote', gulp.series(
+    configServe,
+    clean,
+    build,
+    remoteDeploy,
+    remoteWatch
+));  

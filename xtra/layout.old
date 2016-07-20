@@ -58,7 +58,7 @@
                         <li class="nav-item ">
                             <a class="nav-link" 
                                href="#"
-                               ng-href="{{auth.url.checkout}}"
+                               ng-href="{{auth.url.review}}"
                                title="View your shopping cart">
                                <i class="fa fa-shopping-cart"></i> 
                              </a>

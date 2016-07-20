@@ -57,14 +57,16 @@
                     </a>
                 </li>
 
-                <li class="cart {%if page == 'checkout' %}active{% endif %}">
-                    <a href="#" ng-href="{{auth.url.checkout}}" title="View your shopping cart">
+                <li class="cart {%if page == 'review' %}active{% endif %}">
+                    <a href="#" ng-href="{{auth.url.review}}" title="View your shopping cart">
                         <i class="fa fa-shopping-cart fa-lg"></i>
-                        <span class="hidden-sm">
+                        <span class="visible-xs-inline visible-lg-inline">
                             Cart
                         </span>
-                        
-                        <span class="cart-val">{{ 123 | currency }}</span>
+                        <span ng-if="cart.qty">  
+                            (<span class="cart-val">{{ cart.qty }}</span>)
+                            <span class="cart-val">{{ cart.total | currency }}</span>
+                        </span>
                     </a>
                 </li>
 

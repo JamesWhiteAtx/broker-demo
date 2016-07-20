@@ -19,23 +19,17 @@ body {
         height: initial;
       }
     }
-    /* .cart {
-      .cart-val {
-        display: inline-block;
-        visibility: hidden;
-        width: 1px;
-        overflow: hidden;
-        white-space: nowrap;
-      }
-      &:hover {
-        .cart-val {
-          width: 70px;
-          visibility: visible;
-        }          
-      }
-    } */
   }
   .shopping {
+    .recommendations {
+      background-color: #c7c8c9;
+      h1 {
+        text-align: center;
+        color: #fff;
+        padding-top: 20px;
+        padding-bottom: 40px;
+      }
+    }
     .product {
       padding-top: 10px;
       padding-bottom: 10px;
@@ -80,23 +74,47 @@ body {
       }
     }
   }
+  .qty-spin {
+    @include user-select(none);
+    .fa.dec, .fa.inc {
+      cursor: pointer;
+      padding-left: 5px;
+      padding-right: 5px;
+    }
+  }
   .buying {
     .img-responsive {
       height: 300px;
     }  
-    .qty {
-      @include user-select(none);
-      .fa.dec, .fa.inc {
-        cursor: pointer;
-        padding-left: 5px;
-        padding-right: 5px;
-      }
-    }
     .btn.add {
       margin-top: 15px;
+      margin-bottom: 15px;
     }
   }
-  
+  .reviewing {
+    .row {
+      &.product {
+        border-top: 1px solid #bbb;
+        .img-responsive {
+          height: 100px;
+          width: 100px;
+        }  
+        .remove {
+          h4 {
+            cursor: pointer;
+          }
+        }
+      }
+      &.total {
+        border-top: 2px solid #bbb;
+      }
+    } 
+    .controls {
+      button {
+        margin-top: 15px;
+      }
+    }
+  }
 }
 
 [ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {

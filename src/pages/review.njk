@@ -1,0 +1,89 @@
+{% extends "layout.njk" %}
+
+{% block content %}
+
+<div class="container reviewing" ng-controller="reviewCtrl as review">
+  <h1>Shopping Cart</h1>
+  
+  <div class="row product" ng-repeat="product in cart.products">
+    <div class="col-xs-10 col-sm-11">
+      <div class="row details">
+        <div class="col-sm-6 clearfix img">
+          <div class="pull-left">
+            <img ng-src={{product.img}} class="img-responsive">
+          </div>
+          <div class="pull-left">
+            <h4>{{product.descr1}}</h4>
+            <h5>{{product.descr2}}</h5>
+          </div>
+        </div>
+        <div class="col-sm-6">
+          <div class="row">
+            <div class="col-xs-4 text-right price">
+              <h4 class="price">
+                {{product.price | currency}}
+              </h4>
+            </div>
+            <div class="col-xs-4 text-center qty">
+              <h4 class="qty-spin">
+                <span class="fa fa-caret-left fa-lg dec" ng-click="review.dec(product)"></span>
+                <span>{{product.qty}}</span>
+                <span class="fa fa-caret-right fa-lg inc" ng-click="review.inc(product)"></span>
+              </h4>
+            </div>
+            <div class="col-xs-4 text-right total">
+              <h4 class="price">
+                {{product.qty * product.price | currency}}
+              </h4>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-xs-2 col-sm-1 remove">
+      <h4 ng-click="cart.remove(product)">
+        <span class="fa fa-remove fa-lg" title="remove"></span>
+      </h4>
+    </div>
+  </div>
+
+  <div class="row total" ng-if="cart.products.length">
+    <div class="col-xs-10 col-sm-11">
+      <div class="row">
+        <div class="col-sm-6">
+          <h4>Total</h4>
+        </div>
+        <div class="col-sm-6">
+          <div class="row">
+            <div class="col-xs-offset-4 col-xs-4 text-center qty">
+              <h4>{{ cart.qty }}</h4>
+            </div>
+            <div class="col-xs-4 text-right total">
+              <h4 class="price">
+                {{ cart.total | currency }}
+              </h4>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>    
+  </div>
+
+  <div class="row" ng-if="!cart.products.length">
+    <div class="col-sm-12">
+      <h4>Your Cart Is Empty</h4>
+    </div>
+  </div>
+
+  <div class="row controls" ng-if="cart.qty">
+    <div class="col-sm-offset-6 col-sm-6 col-md-offset-8 col-md-4">
+      <button type="button" class="btn btn-default btn-lg btn-block">
+        <span>Proceed to Checkout</span>
+        <span class="fa fa-chevron-right" title="remove"></span>
+      </button>
+    </div>
+  </div>
+
+</div>
+ 
+{% endblock %}

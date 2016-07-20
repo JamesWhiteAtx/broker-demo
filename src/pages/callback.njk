@@ -1,3 +1,33 @@
-{% extends "callback-layout.njk" %}
-
-{% block content %}{% endblock %}
+<!DOCTYPE html>
+<html>
+<head>
+  <title>UnboundID Data Broker Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="img/favico.ico" rel="shortcut icon">
+</head>
+<body style="background-color: #dbdbdb;">
+  <script>
+  (function (undefined) {
+  alert('callback')
+    var l = location;
+    var origin = l.origin;
+    var path = l.pathname.substring(0, l.pathname.lastIndexOf('/') + 1);
+    path = getStatePage(path, l.hash || l.search);
+    var search = encodeURIComponent(btoa(l.search || ''));
+    var hash = encodeURIComponent(btoa(l.hash || '')); 
+    l.replace(origin + path + '?csearch=' + search + '&chash=' + hash);
+    function getStatePage(path, qStr) {
+      if (!qStr) {return path;}
+      var regex = new RegExp("[?#&]state(=([^&#]*)|&|#|$)");
+      var results = regex.exec(qStr);
+      if (!results || !results[2]) {return path;}
+      var state = decodeURIComponent(results[2].replace(/\+/g, " "));
+      var idx = state.indexOf(';');
+      if (idx + 3 < state.length) {
+        return path + state.substr(idx + 1) + '.html';
+      }
+    }
+  })();
+  </script>
+</body>
+</html>

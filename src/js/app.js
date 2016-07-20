@@ -9,20 +9,19 @@
   UNBOUNDID.MODULE_NAME = 'broker';
 
   angular.module(UNBOUNDID.MODULE_NAME, [])
-    // .constant('cfg', {
-    //   jwtKey: 'JWT'
-    // })
+
     .constant('pages', {
       home: 'index.html',
       profile: 'profile.html',
-      checkout: 'checkout.html',
+      review: 'review.html',
       social: 'social.html',
       buy: 'buy.html'
     })
     .constant('keys', {
-      FLOW_STATE: 'my_account_flow_state',
-      ACCESS_TOKEN: 'my_account_access_token',
-      STATE: 'my_account_state'
+      FLOW_STATE: 'demo_flow_state',
+      ACCESS_TOKEN: 'demo_access_token',
+      STATE: 'demo_state',
+      CART: 'demo_cart'
     })
 
     .service('storage', function storage($window) {
@@ -38,6 +37,23 @@
       self.remove = function (key) {
         return $window.sessionStorage.removeItem(key);
       };
+
+      self.setObject = function(key, obj) {
+        return self.set(key, angular.toJson(obj));
+      };
+
+      self.getObject = function(key) {
+        var result = null;
+
+        var stored = self.get(key);
+
+        if (angular.isString(stored)) {       // If there is a stored string value retrieved...
+          result = angular.fromJson(stored);  // convert from JSON to an object.
+        }
+      
+        return result;
+      };
+
     })
     
     .service('json', function brand($q, $http) {
@@ -162,8 +178,72 @@
 
     })
 
+    .service ('cart', function cart(keys, storage) {
+      var self = this;
+      self.user = null;
+      self.key = null;
+      self.products = [];
+      self.qty = 0;
+      self.total = 0;
+
+      self.init = init;
+      self.add = add;
+      self.remove = remove;
+      self.update = update;
+
+      function init(user) {
+        self.user = user;
+        self.key = null;
+        var data = storage.getObject(keys.CART);
+
+        if (!angular.isObject(data) || 
+          (data.user && self.user && (data.user !== self.user))) {
+          storage.remove(keys.CART);
+          data = {}
+        }
+
+        self.products = data.products || [];
+        update();
+      }
+
+      function add(addProd) {
+        var found = self.products.filter(function filter(prod) {
+          return (prod.id == addProd.id);
+        })[0];
+
+        if (found) {
+          found.qty += addProd.qty; 
+        } else {
+          self.products.push( angular.copy(addProd) );
+        }
+        
+        update();
+      }
+
+      function remove(delProd) {
+        var idx = self.products.indexOf(delProd);
+        if (idx !== -1) {
+          self.products.splice(idx, 1);
+        }
+        update();
+      }
+
+      function update() {
+        var tot = 0;
+        var qty = 0;
+        self.products.forEach(function(prod) {
+          qty += prod.qty;
+          tot += prod.qty * prod.price;
+        })
+        self.qty = qty;
+        self.total = tot;
+
+        storage.setObject(keys.CART, self);
+      }
+    })
+
     .service('auth', function auth($location, $window, $http, $q, $httpParamSerializer, 
-        utils, products, config, pages, storage, keys, errs) {
+        utils, products, config, pages, storage, keys, errs, cart, current) {
       var self = this;
       self.authorized = false;
       self.bearerToken = null;
@@ -275,6 +355,7 @@
           })
           .finally(function (result) {
             self.profile = profile;
+            cart.init(self.profile.userName);
             return self.profile;
           });
       }      
@@ -291,7 +372,7 @@
         return encoded; 
       }      
 
-      function loadAuthorizeUrl(page) {
+      function loadAuthorizeUrl() {
         var state;
 
         return config.loaded.then(function loaded(data) {
@@ -304,15 +385,17 @@
             'redirect_uri=' + encodeURIComponent(data.CLIENT_REDIRECT_URL) + '&' +
             'scope=' + encodeURIComponent(data.SCOPES.join(' ')) + '&' +
             'acr_values=' + encodeURIComponent(data.ACR_VALUES.join(' ')) + '&' +
-            'state=' + state;// + ';' + page;
+            'state=' + encodeURIComponent(state + ';' + current);
         });
 
       }
       
       function loadLogoutUrl() {
+        var state = storage.get(keys.STATE) || '0';
         return config.loaded.then(function loaded(data) {
-          return buildUrl(data.IDENTITY_PROVIDER_URL, 'oauth/logout') + '?' +
-            'post_logout_redirect_uri=' + encodeURIComponent(data.CLIENT_REDIRECT_URL);
+          return buildUrl(data.IDENTITY_PROVIDER_URL, data.LOGOUT_ROUTE) + '?' +
+            'post_logout_redirect_uri=' + encodeURIComponent(data.CLIENT_REDIRECT_URL) + '&' +
+            'state=' + encodeURIComponent(state + ';' + current);
         });
       }
 
@@ -353,18 +436,18 @@
         if (token) {
           return $q.resolve( tokenUrl(url, token) );
         } else {
-          return loadAuthorizeUrl(url);
+          return loadAuthorizeUrl();
         }
       }
 
       function assignUrls(token) {
         self.url = {
           home: tokenUrl(pages.home, token),
-          checkout: tokenUrl(pages.checkout, token),
+          review: tokenUrl(pages.review, token),
           social: tokenUrl(pages.social, token),
         };
         return $q.all([
-          loadAuthorizeUrl(pages.home).then(function(url) {
+          loadAuthorizeUrl().then(function(url) {
             return self.url.signin = url;
           }),
           loadLogoutUrl(pages.home, token).then(function(url) {
@@ -414,9 +497,10 @@
       // }
     })
 
-    .controller('mainCtrl', function mainCtrl($scope, auth, brand, errs) {
+    .controller('mainCtrl', function mainCtrl($scope, auth, brand, cart, errs) {
       var main = this;
 
+      $scope.cart = cart;
       $scope.auth = auth;
       $scope.errs = errs;
 
@@ -427,7 +511,7 @@
 
     })
     
-    .controller('shopCtrl', function cartCtrl($scope, products, auth, pages, $window) {
+    .controller('shopCtrl', function shopCtrl($scope, products, auth, pages, $window) {
       var shop = this;
       shop.buy = buy;
       
@@ -471,10 +555,24 @@
       
     })
 
-    .controller('cartCtrl', function cartCtrl($scope, auth, pages) {
-      var cart = this;
-      //auth.onlyAuth(pages.checkout);
-      cart.count = 5;
+    .controller('reviewCtrl', function reviewCtrl($scope, cart) {
+      var review = this;
+      review.inc = inc;
+      review.dec = dec;
+
+      function inc(prod) {
+        prod.qty += 1;
+        cart.update();
+      }
+      
+      function dec(prod) {
+        if (prod && prod.qty > 0) {
+          prod.qty -= 1;
+          cart.update();
+        }
+      }      
+      
+      //auth.onlyAuth(pages.review);
     })
 
     .controller('socialCtrl', function socialCtrl($scope, auth, pages) {
@@ -490,4 +588,4 @@
     })
     ;
 
-} (window.UNBOUNDID = window.UNBOUNDID || {}));  
+} (window.UNBOUNDID = window.UNBOUNDID || {}));

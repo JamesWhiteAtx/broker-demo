@@ -16,7 +16,7 @@
           <h4><span class="price">{{buy.product.price | currency}}</span></h4>
         </div>
         <div class="col-xs-4">
-          <h4 class="qty">
+          <h4 class="qty-spin">
             <span class="fa fa-caret-left fa-lg dec" ng-click="buy.dec()"></span>
             <span>{{buy.product.qty}}</span>
             <span class="fa fa-caret-right fa-lg inc" ng-click="buy.inc()"></span>
@@ -28,11 +28,16 @@
       </div>
       <div class="row">
         <div class="col-sm-6 col-md-4">
-          <button type="button" class="btn btn-default btn-block add" ng-if="buy.product.qty">
+          <button type="button" class="btn btn-default btn-block add" 
+            ng-if="buy.product.qty" ng-click="cart.add(buy.product)">
             <i class="fa fa-shopping-cart fa-lg"></i>
             Add To Cart
           </button>
-        
+        </div>
+      </div>
+      <div class="row" ng-if="cart.qty">
+        <div class="col-sm-12">
+        <a href="" ng-href="{{auth.url.review}}" class="pull-right">Review your Cart</a>
         </div>
       </div>
     </div>

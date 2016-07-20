@@ -2,6 +2,7 @@
   "IDENTITY_PROVIDER_URL": "/",
   "RESOURCE_SERVER_URL": "/",
   "AUTHORIZE_ROUTE": "oauth/authorize",
+  "LOGOUT_ROUTE": "oauth/logout",
   "CLIENT_REDIRECT_URL": "/docs/demo/callback.html",
   "CLIENT_ID": "@broker-demo@",
   "SCOPES": ["urn:unboundid:scope:manage_profile"],

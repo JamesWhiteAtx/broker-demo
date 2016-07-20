@@ -2,13 +2,12 @@
 
 {% block content %}
 
-<div class="container shopping" ng-controller="shopCtrl as shop">
+<div class="container-fluid shopping" ng-controller="shopCtrl as shop">
 
-  <div class="row" ng-if="products.recommendations">
+  <div class="row recommendations" ng-if="products.recommendations">
     <div class="col-sm-12">
-      <h2>Recommendations for You, {{auth.profile.name.givenName}}</h2>
+      <h1>Recommendations for You, {{auth.profile.name.givenName}}</h1>
     </div>
-
   </div>
 
   <div ng-repeat="group in products.groups">

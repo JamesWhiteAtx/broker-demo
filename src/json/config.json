@@ -5,6 +5,6 @@
   "LOGOUT_ROUTE": "oauth/logout",
   "CLIENT_REDIRECT_URL": "/docs/demo/callback.html",
   "CLIENT_ID": "@broker-demo@",
-  "SCOPES": ["openid profile"],
+  "SCOPES": ["openid", "profile", "urn:unboundid:scope:manage_profile"],
   "ACR_VALUES": ["MFA", "Default"]
 }

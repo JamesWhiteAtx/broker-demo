@@ -85,7 +85,7 @@ function configure(dist) {
   dependsOn('base.css', '*');
 }
 
-// default to configuring for loal development server
+// default to configuring for local development server
 configServe();
 
 function dependsOn(name, required) {

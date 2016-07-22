@@ -18,10 +18,7 @@
       buy: 'buy.html'
     })
     .constant('keys', {
-      FLOW_STATE: 'demo_flow_state',
-      ACCESS_TOKEN: 'demo_access_token',
       STATE: 'demo_state',
-      CART: 'demo_cart'
     })
 
     .service('storage', function storage($window) {
@@ -79,7 +76,7 @@
       this.loaded = json.load('config.json');
     })
 
-    .service('products', function products(brand) {
+    .service('products', function products(brand, pages) {
       var self = this
       self.preferences = null;
       self.groups = null;
@@ -106,7 +103,12 @@
                 })[0];
 
                 if (found) {
+                  found.display = any.display;
                   self.groups.push(any);
+
+                  any.products.forEach(function (product) {
+                    product.buy = auth.tokenUrl(pages.buy, auth.bearerToken, {"product": product.id});
+                  });
                 }
               });
             } 
@@ -178,7 +180,9 @@
 
     })
 
-    .service ('cart', function cart(keys, storage) {
+    .service ('cart', function cart(storage) {
+      var CART_KEY = 'demo_cart';
+
       var self = this;
       self.user = null;
       self.key = null;
@@ -192,13 +196,14 @@
       self.update = update;
 
       function init(user) {
+        
         self.user = user;
         self.key = null;
-        var data = storage.getObject(keys.CART);
+        var data = storage.getObject(CART_KEY);
 
         if (!angular.isObject(data) || 
           (data.last && self.user && (data.last !== self.user))) {
-          storage.remove(keys.CART);
+          storage.remove(CART_KEY);
           data = {}
         }
 
@@ -238,15 +243,84 @@
         self.qty = qty;
         self.total = tot;
         
-        var data = storage.getObject(keys.CART) || {};
+        var data = storage.getObject(CART_KEY) || {};
         
         self.last = self.user || data.last;
-        storage.setObject(keys.CART, self);
+        storage.setObject(CART_KEY, self);
+      }
+    })
+
+    .service('jwt', function jwt(storage) {
+      var ACCESS_TOKEN = 'demo_access_token';
+      var ID_TOKEN = 'demo_id_token';
+
+      var self = this;
+      
+      self.getBearer = getBearer;
+      self.setBearer = setBearer;
+      self.clearBearer = clearBearer;
+      self.getId = getId;
+      self.setId = setId;
+      self.clearId = clearId;
+      self.highAssurance = highAssurance;
+
+      function highAssurance() {
+        var idJwt = getId();
+        return (idJwt && idJwt.payload && idJwt.payload.acr == 'MFA'); 
+      }
+       
+      function getBearer() {
+        return getToken(ACCESS_TOKEN);
+      }
+
+      function setBearer(token) {
+        setToken(ACCESS_TOKEN, token);
+      }
+
+      function clearBearer(token) {
+        clearToken(ACCESS_TOKEN);
+      }
+
+      function getId() {
+        return getToken(ID_TOKEN);
+      }
+
+      function setId(token) {
+        setToken(ID_TOKEN, token);
+      }
+
+      function clearId(token) {
+        clearToken(ID_TOKEN);
+      }
+
+      function getToken(key) {
+        var result;
+        var token = storage.get(key);
+        if (angular.isString(token)) {
+          result = decode(token);
+        }
+        return result;
+      }
+
+      function setToken(key, token) {
+        storage.set(key, token);
+      }
+
+      function clearToken(key) {
+        storage.remove(key);
+      }
+
+      function decode(jwt) {
+        var parts = jwt.split('.');
+        return {
+          header: JSON.parse(atob(parts[0])),
+          payload: JSON.parse(atob(parts[1]))
+        }
       }
     })
 
     .service('auth', function auth($location, $window, $http, $q, $httpParamSerializer, 
-        utils, products, config, pages, storage, keys, errs, cart, current) {
+        utils, products, config, pages, keys, storage, jwt, errs, cart, current) {
       var self = this;
       self.authorized = false;
       self.bearerToken = null;
@@ -270,11 +344,25 @@
             return params;
           })
           .then(function (params) {
-            var token, error, errorDescr;
+            var idToken;
             if (params) {
-              token = params['access_token'];
-              if (token) {
-                return token; 
+              idToken = params['id_token'];
+              if (idToken) {
+                
+                var t = idToken.split('.');
+                var p = atob(t[1]);
+
+                jwt.setId(idToken);
+              }
+            }
+            return params;
+          })
+          .then(function (params) {
+            var accessToken, error, errorDescr;
+            if (params) {
+              accessToken = params['access_token'];
+              if (accessToken) {
+                return accessToken; 
               } else if (params['error']) {
                 error = params['error'];
                 errorDescr = params['error_description'];
@@ -309,14 +397,15 @@
           .then(function (profile) {
             self.authorized = true;
             self.bearerToken = token;
-            storage.set(keys.ACCESS_TOKEN, self.bearerToken);
+            jwt.setBearer(self.bearerToken);
 
             return self.bearerToken;
           })
           .catch(function (reason) {
             self.authorized = false;
             self.bearerToken = null;
-            storage.remove(keys.ACCESS_TOKEN);
+            jwt.clearBearer();
+            jwt.clearId();
 
             return $q.reject(reason);
           })          
@@ -388,7 +477,7 @@
             'redirect_uri=' + encodeURIComponent(data.CLIENT_REDIRECT_URL) + '&' +
             'scope=' + encodeURIComponent(data.SCOPES.join(' ')) + '&' +
             'acr_values=' + encodeURIComponent(data.ACR_VALUES.join(' ')) + '&' +
-            'nonce=' + encodeURIComponent(state) + '&' +
+            'nonce=' + encodeURIComponent(current) + '&' +
             'state=' + encodeURIComponent(state + ';' + current);
         });
 
@@ -515,18 +604,17 @@
 
     })
     
-    .controller('shopCtrl', function shopCtrl($scope, products, auth, pages, $window) {
+    .controller('shopCtrl', function shopCtrl($scope, products, auth) {
       var shop = this;
-      shop.buy = buy;
       
       $scope.products = products;
 
-      products.defineGroups();
+      products.defineGroups(auth);
 
-      function buy(product) {
-	      var url = auth.tokenUrl(pages.buy, auth.bearerToken, {"product": product.id});
-        $window.location = url;
-      }
+      // function buy(product) {
+	    //   var url = auth.tokenUrl(pages.buy, auth.bearerToken, {"product": product.id});
+      //   $window.location = url;
+      // }
     })
 
     .controller('buyCtrl', function buyCtrl($scope, $window, utils, products) {
@@ -559,10 +647,13 @@
       
     })
 
-    .controller('reviewCtrl', function reviewCtrl($scope, cart) {
+    .controller('reviewCtrl', function reviewCtrl($scope, cart, jwt) {
       var review = this;
+
       review.inc = inc;
       review.dec = dec;
+
+      review.high = jwt.highAssurance();
 
       function inc(prod) {
         prod.qty += 1;
@@ -588,7 +679,6 @@
     .controller('profileCtrl', function profileCtrl($scope, auth, pages) {
       var profile = this;
       //auth.onlyAuth(pages.profile);
-      profile.friends = 5;
     })
     ;
 

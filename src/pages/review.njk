@@ -84,6 +84,15 @@
     </div>
   </div>
 
+  <div class="row controls" ng-if="cart.qty && review.high">
+    <div class="col-sm-offset-6 col-sm-6 col-md-offset-8 col-md-4">
+      <button type="button" class="btn btn-default btn-lg btn-block">
+        <span class="fa fa-hand-pointer-o" title="remove"></span>
+        <span>1 Click Checkout</span>
+      </button>
+    </div>
+  </div>
+
 </div>
  
 {% endblock %}
